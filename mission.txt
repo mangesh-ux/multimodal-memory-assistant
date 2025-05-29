@@ -1,0 +1,12 @@
+I’m building a Multimodal Personal Memory Assistant that gives me semantic, timestamped, and multimodal access to my personal data—on my terms.
+
+Unlike ChatGPT’s memory, which is proprietary, non-inspectable, and limited to conversational context, my assistant uses a transparent Retrieval-Augmented Generation (RAG) pipeline over a persistent, self-owned vector store of text, images, and PDFs.
+
+It separates embedding and generation responsibilities: embeddings are indexed using FAISS with metadata like source, type, and timestamp, while generation is delegated to an LLM that I control—whether it’s OpenAI’s GPT-4 or a local Mistral model.
+
+This architecture lets me ask:  
+“What were my notes from March 2024 about causality in ML?”  
+or  
+“Show me the handwritten diagram I drew related to transformer bottlenecks.”
+
+The result is an assistant that doesn’t just chat—it remembers, retrieves, reranks, filters, and cites—like a semantic operating system for my brain.
