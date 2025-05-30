@@ -1,3 +1,5 @@
+import hashlib
+import json
 import streamlit as st
 import sys
 from pathlib import Path
@@ -8,6 +10,7 @@ from core.memory_handler import save_uploaded_file
 from core.retriever import retrieve_relevant_chunks
 import openai
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -50,6 +53,48 @@ with tabs[0]:
                         notes=notes
                     )
                     st.success(f"{uploaded_file.name} saved to memory ✅")
+    
+    st.subheader("🧠 Add a Memory Note")
+
+    note_text = st.text_area("Write something you want Mongo to remember")
+    note_title = st.text_input("Optional title")
+    note_tags = st.text_input("Tags (comma-separated)")
+    note_category = st.selectbox("Category", ["", "idea", "meeting", "personal", "thought"])
+    note_notes = st.text_input("Additional notes")
+
+    if st.button("Save Note"):
+        # Save as virtual file (text only)
+        entry = {
+            "filename": f"user_note_{datetime.now().isoformat()}.txt",
+            "filetype": "txt",
+            "filepath": "",  # No file
+            "text_preview": note_text[:500],
+            "date_uploaded": datetime.now().isoformat(),
+            "embedding_chunks": [],
+            "source_hash": hashlib.md5(note_text.encode()).hexdigest(),
+            "title": note_title,
+            "tags": [t.strip() for t in note_tags.split(",") if t],
+            "category": note_category,
+            "notes": note_notes
+        }
+
+        # Chunk + embed
+        from core.preprocess import chunk_text
+        from core.embedder import embed_text_list
+
+        chunks = chunk_text(note_text)
+        vectors = embed_text_list(chunks)
+        entry["embedding_chunks"] = [{"text": c, "vector": v} for c, v in zip(chunks, vectors)]
+
+        # Append to memory_index.json
+        with open("data/memory_index.json", "r") as f:
+            memory = json.load(f)
+        memory.append(entry)
+        with open("data/memory_index.json", "w") as f:
+            json.dump(memory, f, indent=2)
+
+        st.success("Saved to memory ✅")
+
 
 # Ask Tab
 with tabs[1]:
@@ -83,17 +128,21 @@ with tabs[1]:
                 f"{'-'*60}\n\n"
             )
 
+        st.caption(f"🧠 Mongo is answering based on {len(top_chunks)} memory snippet(s) with top similarity: {top_chunks[0]['score']:.3f}")
 
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
+                {"role": "system", "content": (
+                "You are Mongo — a calm, helpful memory assistant. "
+                "You answer questions conversationally and clearly. "
+                "You use the provided context (memory chunks) to answer accurately, and never guess without context. "
+                "If you don't know something, you say so confidently. "
+                "When context is available, weave it naturally into your response. "
+                "Avoid overly formal or robotic tone — just be helpful and clear, like a well-trained assistant."
+                )},
                 {
-                    "role": "system",
-                    "content": "You are a helpful memory assistant. Use the context provided to answer as precisely as possible."
-                },
-                {
-                    "role": "user",
-                    "content": f"Context:\n{context}\n\nQuestion:\n{user_input}"
+                    "role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{user_input}"
                 }
             ]
         )
@@ -108,7 +157,7 @@ with tabs[1]:
         if msg["role"] == "user":
             st.markdown(f"🧍‍♂️ **You:** {msg['content']}")
         else:
-            st.markdown(f"🤖 **Assistant:** {msg['content']}")
+            st.markdown(f"🧠 Mongo** {msg['content']}")
 
     # Clear chat
     if st.button("🔁 Reset Conversation"):

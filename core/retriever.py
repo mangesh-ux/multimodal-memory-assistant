@@ -36,5 +36,6 @@ def retrieve_relevant_chunks(query: str, top_k: int = 5) -> list[dict]:
             })
 
     # Step 3: Sort by similarity
-    top_chunks = sorted(scored_chunks, key=lambda x: x["score"], reverse=True)[:top_k]
-    return top_chunks
+    top_chunks = sorted(scored_chunks, key=lambda x: x["score"], reverse=True)
+    return top_chunks[:top_k] or [max(scored_chunks, key=lambda x: x["score"])]
+
