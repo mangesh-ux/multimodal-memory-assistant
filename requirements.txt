@@ -3,3 +3,4 @@ streamlit
 openai
 pymupdf
 python-dotenv
+faiss-cpu

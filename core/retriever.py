@@ -1,41 +1,53 @@
+import os
 import json
 import numpy as np
-from pathlib import Path
-from core.embedder import embed_text_list
+import faiss
+from openai import OpenAI
+from dotenv import load_dotenv
 
-MEMORY_INDEX_PATH = Path("data/memory_index.json")
+load_dotenv()
 
-def cosine_similarity(a, b):
-    a = np.array(a)
-    b = np.array(b)
-    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def retrieve_relevant_chunks(query: str, top_k: int = 5) -> list[dict]:
-    # Step 1: Embed the question
-    query_vector = embed_text_list([query])[0]
+INDEX_PATH = os.path.join("core", "memory_store", "index.faiss")
+METADATA_PATH = os.path.join("core", "memory_store", "metadata.json")
 
-    # Step 2: Load memory
-    with open(MEMORY_INDEX_PATH, "r") as f:
-        index = json.load(f)
+def embed_query(query: str) -> np.ndarray:
+    response = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=[query]
+    )
+    return np.array(response.data[0].embedding, dtype=np.float32).reshape(1, -1)
 
-    scored_chunks = []
-    for entry in index:
-        for chunk in entry["embedding_chunks"]:
-            sim = cosine_similarity(query_vector, chunk["vector"])
-            scored_chunks.append({
-                "text": chunk["text"],
-                "score": sim,
-                "source_file": entry["filename"],
-                "title": entry.get("title", ""),
-                "tags": entry.get("tags", []),
-                "notes": entry.get("notes", ""),
-                "filetype": entry.get("filetype", ""),
-                "date_uploaded": entry.get("date_uploaded", ""),
-                "category": entry.get("category", ""),
-                "text_preview": entry.get("text_preview", "")
-            })
+def retrieve_relevant_chunks(query: str, top_k=5) -> list[dict]:
+    if not os.path.exists(INDEX_PATH) or not os.path.exists(METADATA_PATH):
+        return []
 
-    # Step 3: Sort by similarity
-    top_chunks = sorted(scored_chunks, key=lambda x: x["score"], reverse=True)
-    return top_chunks[:top_k] or [max(scored_chunks, key=lambda x: x["score"])]
+    # Load FAISS index
+    index = faiss.read_index(INDEX_PATH)
 
+    # Embed query
+    query_vec = embed_query(query)
+
+    # Search
+    distances, indices = index.search(query_vec, top_k)
+    indices = indices.flatten()
+
+    # Load metadata
+    with open(METADATA_PATH, "r") as f:
+        metadata = json.load(f)
+
+    results = []
+    for i, idx in enumerate(indices):
+        str_idx = str(idx)
+        if str_idx in metadata:
+            result = metadata[str_idx]
+            result["score"] = float(distances[0][i])
+            results.append(result)
+
+    print("Query:", query)
+    print("Top Matches:")
+    for r in results:
+        print("-", r["title"], "| Score:", r.get("score"))
+
+    return results

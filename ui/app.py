@@ -8,9 +8,11 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from core.memory_handler import save_uploaded_file
 from core.retriever import retrieve_relevant_chunks
+from core.embedder import embed_text, embed_and_store
 import openai
 import os
 from datetime import datetime
+from core.context_formatter import format_context_with_metadata
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -80,10 +82,9 @@ with tabs[0]:
 
         # Chunk + embed
         from core.preprocess import chunk_text
-        from core.embedder import embed_text_list
 
         chunks = chunk_text(note_text)
-        vectors = embed_text_list(chunks)
+        vectors = embed_and_store(chunks)
         entry["embedding_chunks"] = [{"text": c, "vector": v} for c, v in zip(chunks, vectors)]
 
         # Append to memory_index.json
@@ -114,33 +115,31 @@ with tabs[1]:
         st.session_state.chat_history.append({"role": "user", "content": user_input})
 
         top_chunks = retrieve_relevant_chunks(user_input, top_k=5)
-        context = ""
-        for c in top_chunks:
-            tag_str = ", ".join(c.get("tags", [])) or "None"
-            context += (
-                f"[Title: {c.get('title', 'Untitled')} | "
-                f"Category: {c.get('category', 'Uncategorized')} | "
-                f"Date Uploaded: {c.get('date_uploaded', '')[:10]} | "
-                f"Tags: {tag_str}]\n"
-                f"Notes: {c.get('notes', 'No notes provided.')}\n"
-                f"Source: {c.get('source_file', '')}\n\n"
-                f"{c['text'].strip()}\n\n"
-                f"{'-'*60}\n\n"
-            )
+        context = format_context_with_metadata(top_chunks)
 
-        st.caption(f"🧠 Mongo is answering based on {len(top_chunks)} memory snippet(s) with top similarity: {top_chunks[0]['score']:.3f}")
+        if top_chunks:
+            st.caption(f"🧠 Mongo is answering based on {len(top_chunks)} memory snippet(s) with top similarity: {top_chunks[0]['score']:.3f}")
+        else:
+            st.caption("🧠 Mongo couldn't find anything relevant in memory.")
+        
+        st.write("Debug — Top Chunks:", top_chunks)
 
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": (
-                "You are Mongo — a calm, helpful memory assistant. "
-                "You answer questions conversationally and clearly. "
-                "You use the provided context (memory chunks) to answer accurately, and never guess without context. "
-                "If you don't know something, you say so confidently. "
-                "When context is available, weave it naturally into your response. "
-                "Avoid overly formal or robotic tone — just be helpful and clear, like a well-trained assistant."
-                )},
+                {
+                    "role": "system",
+                    "content": (
+                        "You are Mongo — a calm, helpful memory assistant. "
+                        "You speak clearly and conversationally, like a natural assistant. "
+                        "You are grounded — you only use information provided in the context. "
+                        "If memory chunks are provided, always answer by referencing them. "
+                        "If a memory chunk includes a date, title, or notes, clarify that you're recalling from that memory. "
+                        "If you don't know something from context, confidently say you don't know. "
+                        "Use markdown when it helps make the answer easier to read (e.g. for bullet points, headings, code, or bold emphasis)."
+                    )
+                }
+,
                 {
                     "role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{user_input}"
                 }
