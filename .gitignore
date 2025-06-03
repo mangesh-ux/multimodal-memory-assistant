@@ -4,3 +4,4 @@ __pycache__/
 .env
 openaikey.txt
 memory_store/
+data/

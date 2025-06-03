@@ -2,5 +2,9 @@ pathlib
 streamlit
 openai
 pymupdf
+pymupdf4llm
 python-dotenv
 faiss-cpu
+pytesseract 
+pdf2image 
+pillow

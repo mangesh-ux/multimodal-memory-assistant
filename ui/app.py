@@ -13,6 +13,7 @@ import openai
 import os
 from datetime import datetime
 from core.context_formatter import format_context_with_metadata
+import streamlit.components.v1 as components
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -47,7 +48,7 @@ with tabs[0]:
                 notes = st.text_area(f"Notes for {uploaded_file.name}", key=f"notes_{uploaded_file.name}")
 
                 if st.button(f"Save {uploaded_file.name}", key=f"save_{uploaded_file.name}"):
-                    entry = save_uploaded_file(
+                    entry, summary = save_uploaded_file(
                         uploaded_file,
                         title=title,
                         tags=tags,
@@ -55,6 +56,27 @@ with tabs[0]:
                         notes=notes
                     )
                     st.success(f"{uploaded_file.name} saved to memory ✅")
+                    if summary:
+                        print("SUMMARY GENERATED:", summary)
+                        with st.container():
+                            st.markdown("### 🧠 Summary by Mongo")
+                            st.markdown(
+                                f"""
+                                <div style="background-color: #f7f8fa; padding: 1rem 1.2rem; border-radius: 8px; border: 1px solid #ddd;">
+                                {summary}
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
+
+                        components.html(f"""
+                            <textarea id="mongo-summary" style="width: 100%; height: 0; opacity: 0;">{summary}</textarea>
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('mongo-summary').value)"
+                                    style="margin-top: 0.5rem;">📋 Copy Summary</button>
+                        """, height=40)
+
+                    else:
+                        st.info("[No summary generated for the short file.]")
     
     st.subheader("🧠 Add a Memory Note")
 

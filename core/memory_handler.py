@@ -5,6 +5,11 @@ from pathlib import Path
 from datetime import datetime
 from core.preprocess import extract_text, chunk_text
 from core.embedder import embed_and_store
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 MEMORY_INDEX_PATH = Path("data/memory_index.json")
 DATA_DIR = Path("data")
@@ -22,6 +27,28 @@ def sanitize_vector(v):
         return [float(x) if isinstance(x, (np.float32, np.float64)) else x for x in v]
     return v
 
+def auto_summarize(text: str, filename: str) -> str:
+    if len(text.split()) < 200:
+        return None  # skip short files
+
+    prompt = (
+        f"This is a document titled '{filename}'. "
+        "Summarize it in 5-7 bullet points, preserving key insights, numbers, or tasks. "
+        "Avoid fluff. Be factual and clear.\n\n"
+        f"{text[:3000]}"  # trim to avoid token limit
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a concise and analytical summarization agent."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"[Summarization failed: {e}]"
 
 def save_uploaded_file(uploaded_file, title, tags, category, notes):
     file_bytes = uploaded_file.read()
@@ -52,6 +79,20 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes):
     } for c in raw_chunks]
 
     chunk_vectors = embed_and_store(chunks)
+
+     # 🔍 Run summarizer agent if applicable
+    summary = auto_summarize(text, uploaded_file.name)
+    if summary:
+        summary_chunks = [{
+            "text": summary,
+            "title": f"Summary of {title or uploaded_file.name}",
+            "tags": tags + ["summary"],
+            "category": category,
+            "notes": "Auto-generated summary for this document.",
+            "filename": uploaded_file.name,
+            "date_uploaded": datetime.now().isoformat()
+        }]
+        embed_and_store(summary_chunks)
 
 
     # Load or create index
@@ -90,4 +131,4 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes):
     with open(MEMORY_INDEX_PATH, "w") as f:
         json.dump(index, f, indent=2)
 
-    return entry
+    return entry, summary
