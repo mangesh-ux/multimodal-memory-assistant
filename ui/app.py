@@ -3,31 +3,94 @@ import json
 import streamlit as st
 import sys
 from pathlib import Path
+from datetime import datetime
+import os
+import openai
+import streamlit.components.v1 as components
+from dotenv import load_dotenv
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from core.memory_handler import save_uploaded_file
 from core.retriever import retrieve_relevant_chunks
-from core.embedder import embed_text, embed_and_store
-import openai
-import os
-from datetime import datetime
+from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
-import streamlit.components.v1 as components
 from core.user_paths import get_memory_index_path
-from dotenv import load_dotenv
+
 load_dotenv()
-
-
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# --- Auth Helpers ---
+def hash_password(password):
+    return hashlib.md5(password.encode()).hexdigest()
 
+def load_users():
+    try:
+        with open("users.json") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+def save_users(users):
+    with open("users.json", "w") as f:
+        json.dump(users, f, indent=2)
+
+def signup_user(username, password, name):
+    users = load_users()
+    if username in users:
+        return False
+    users[username] = {"password": hash_password(password), "name": name}
+    save_users(users)
+    return True
+
+def authenticate_user(username, password):
+    users = load_users()
+    if username in users and users[username]["password"] == hash_password(password):
+        return True, users[username]["name"]
+    return False, ""
+
+# --- App Init ---
 st.set_page_config(page_title="Multimodal Memory Assistant", layout="wide")
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+    st.session_state.user_id = None
+
+if not st.session_state.authenticated:
+    st.title("🔐 Login or Sign Up")
+    mode = st.radio("Choose mode:", ["Login", "Sign Up"], horizontal=True)
+
+    if mode == "Login":
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
+        if st.button("Login"):
+            success, name = authenticate_user(username, password)
+            if success:
+                st.session_state.authenticated = True
+                st.session_state.user_id = username
+                st.success(f"Welcome back, {name}!")
+                st.rerun()
+            else:
+                st.error("Invalid username or password")
+
+    elif mode == "Sign Up":
+        new_username = st.text_input("Choose a username", key="signup_user")
+        new_password = st.text_input("Choose a password", type="password", key="signup_pass")
+        full_name = st.text_input("Your full name")
+        if st.button("Sign Up"):
+            if not new_username or not new_password or not full_name:
+                st.warning("Please fill all fields.")
+            elif signup_user(new_username, new_password, full_name):
+                st.success("Account created! Please log in.")
+            else:
+                st.error("Username already exists. Try a different one.")
+
+    st.stop()
+
+# --- Main UI ---
+user_id = st.session_state.user_id
 st.title("🧠 Multimodal Memory Assistant")
-
 tabs = st.tabs(["📂 Memory", "💬 Ask"])
-
-user_id = "demo_user"
 
 # Memory Tab
 with tabs[0]:
