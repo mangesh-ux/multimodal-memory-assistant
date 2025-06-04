@@ -82,7 +82,7 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes, user_id):
         "date_uploaded": datetime.now().isoformat()
     } for c in raw_chunks]
 
-    chunk_vectors = embed_and_store(chunks)
+    chunk_vectors = embed_and_store(chunks, user_id)
 
      # 🔍 Run summarizer agent if applicable
     summary = auto_summarize(text, uploaded_file.name)
@@ -96,7 +96,7 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes, user_id):
             "filename": uploaded_file.name,
             "date_uploaded": datetime.now().isoformat()
         }]
-        embed_and_store(summary_chunks)
+        embed_and_store(summary_chunks, user_id)
 
 
     # Load or create index
