@@ -14,6 +14,7 @@ import os
 from datetime import datetime
 from core.context_formatter import format_context_with_metadata
 import streamlit.components.v1 as components
+from core.user_paths import get_memory_index_path
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -25,6 +26,8 @@ st.set_page_config(page_title="Multimodal Memory Assistant", layout="wide")
 st.title("🧠 Multimodal Memory Assistant")
 
 tabs = st.tabs(["📂 Memory", "💬 Ask"])
+
+user_id = "demo_user"
 
 # Memory Tab
 with tabs[0]:
@@ -49,12 +52,14 @@ with tabs[0]:
 
                 if st.button(f"Save {uploaded_file.name}", key=f"save_{uploaded_file.name}"):
                     entry, summary = save_uploaded_file(
-                        uploaded_file,
-                        title=title,
-                        tags=tags,
-                        category=category,
-                        notes=notes
-                    )
+                            uploaded_file,
+                            title=title,
+                            tags=tags,
+                            category=category,
+                            notes=notes,
+                            user_id=user_id
+                        )
+
                     st.success(f"{uploaded_file.name} saved to memory ✅")
                     if summary:
                         print("SUMMARY GENERATED:", summary)
@@ -106,15 +111,22 @@ with tabs[0]:
         from core.preprocess import chunk_text
 
         chunks = chunk_text(note_text)
-        vectors = embed_and_store(chunks)
+        vectors = embed_and_store(chunks, user_id)
         entry["embedding_chunks"] = [{"text": c, "vector": v} for c, v in zip(chunks, vectors)]
 
         # Append to memory_index.json
-        with open("data/memory_index.json", "r") as f:
-            memory = json.load(f)
+        memory_path = get_memory_index_path(user_id)
+        if memory_path.exists():
+            with open(memory_path, "r") as f:
+                memory = json.load(f)
+        else:
+            memory = []
+
         memory.append(entry)
-        with open("data/memory_index.json", "w") as f:
+
+        with open(memory_path, "w") as f:
             json.dump(memory, f, indent=2)
+
 
         st.success("Saved to memory ✅")
 
@@ -136,7 +148,7 @@ with tabs[1]:
         # Append user message
         st.session_state.chat_history.append({"role": "user", "content": user_input})
 
-        top_chunks = retrieve_relevant_chunks(user_input, top_k=5)
+        top_chunks = retrieve_relevant_chunks(user_input, user_id=user_id, top_k=5)
         context = format_context_with_metadata(top_chunks)
 
         if top_chunks:

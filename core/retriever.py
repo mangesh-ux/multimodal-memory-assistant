@@ -4,13 +4,14 @@ import numpy as np
 import faiss
 from openai import OpenAI
 from dotenv import load_dotenv
+from core.user_paths import get_faiss_index_path, get_metadata_path
 
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-INDEX_PATH = os.path.join("core", "memory_store", "index.faiss")
-METADATA_PATH = os.path.join("core", "memory_store", "metadata.json")
+# INDEX_PATH = os.path.join("core", "memory_store", "index.faiss")
+# METADATA_PATH = os.path.join("core", "memory_store", "metadata.json")
 
 def embed_query(query: str) -> np.ndarray:
     response = client.embeddings.create(
@@ -19,12 +20,14 @@ def embed_query(query: str) -> np.ndarray:
     )
     return np.array(response.data[0].embedding, dtype=np.float32).reshape(1, -1)
 
-def retrieve_relevant_chunks(query: str, top_k=5) -> list[dict]:
-    if not os.path.exists(INDEX_PATH) or not os.path.exists(METADATA_PATH):
+def retrieve_relevant_chunks(query: str, user_id: str, top_k=5) -> list[dict]:
+    index_path = get_faiss_index_path(user_id)
+    metadata_path = get_metadata_path(user_id)
+    if not os.path.exists(index_path) or not os.path.exists(metadata_path):
         return []
 
     # Load FAISS index
-    index = faiss.read_index(INDEX_PATH)
+    index = faiss.read_index(str(index_path))
 
     # Embed query
     query_vec = embed_query(query)
@@ -34,7 +37,7 @@ def retrieve_relevant_chunks(query: str, top_k=5) -> list[dict]:
     indices = indices.flatten()
 
     # Load metadata
-    with open(METADATA_PATH, "r") as f:
+    with open(metadata_path, "r") as f:
         metadata = json.load(f)
 
     results = []

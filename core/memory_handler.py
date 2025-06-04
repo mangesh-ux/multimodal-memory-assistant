@@ -5,13 +5,17 @@ from pathlib import Path
 from datetime import datetime
 from core.preprocess import extract_text, chunk_text
 from core.embedder import embed_and_store
+from core.user_paths import (
+    get_user_data_dir,
+    get_memory_index_path
+)
 from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-MEMORY_INDEX_PATH = Path("data/memory_index.json")
+# MEMORY_INDEX_PATH = Path("data/memory_index.json")
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
@@ -50,13 +54,13 @@ def auto_summarize(text: str, filename: str) -> str:
     except Exception as e:
         return f"[Summarization failed: {e}]"
 
-def save_uploaded_file(uploaded_file, title, tags, category, notes):
+def save_uploaded_file(uploaded_file, title, tags, category, notes, user_id):
     file_bytes = uploaded_file.read()
     file_hash = get_file_hash(file_bytes)
 
     ext = Path(uploaded_file.name).suffix.lower().strip(".")
     filename = f"{file_hash}_{uploaded_file.name}"
-    file_path = DATA_DIR / filename
+    file_path = get_user_data_dir(user_id) / filename
     print("file_path", file_path)
     with open(file_path, "wb") as f:
         f.write(file_bytes)
@@ -96,8 +100,8 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes):
 
 
     # Load or create index
-    if MEMORY_INDEX_PATH.exists():
-        with open(MEMORY_INDEX_PATH, "r") as f:
+    if get_memory_index_path(user_id).exists():
+        with open(get_memory_index_path(user_id), "r") as f:
             try:
                 index = json.load(f)
             except json.JSONDecodeError:
@@ -128,7 +132,7 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes):
 
     index.append(entry)
 
-    with open(MEMORY_INDEX_PATH, "w") as f:
+    with open(get_memory_index_path(user_id), "w") as f:
         json.dump(index, f, indent=2)
 
     return entry, summary
