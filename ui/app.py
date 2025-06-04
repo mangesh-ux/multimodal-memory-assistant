@@ -127,7 +127,7 @@ with tabs[0]:
                     if summary:
                         print("SUMMARY GENERATED:", summary)
                         with st.container():
-                            st.markdown("### 🧠 Summary by Mongo")
+                            st.markdown("### 🧠 Summary by MemoBrain")
                             st.markdown(
                                 f"""
                                 <div style="background-color: #f7f8fa; padding: 1rem 1.2rem; border-radius: 8px; border: 1px solid #ddd;">
@@ -138,8 +138,8 @@ with tabs[0]:
                             )
 
                         components.html(f"""
-                            <textarea id="mongo-summary" style="width: 100%; height: 0; opacity: 0;">{summary}</textarea>
-                            <button onclick="navigator.clipboard.writeText(document.getElementById('mongo-summary').value)"
+                            <textarea id="MemoBrain-summary" style="width: 100%; height: 0; opacity: 0;">{summary}</textarea>
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('MemoBrain-summary').value)"
                                     style="margin-top: 0.5rem;">📋 Copy Summary</button>
                         """, height=40)
 
@@ -148,7 +148,7 @@ with tabs[0]:
     
     st.subheader("🧠 Add a Memory Note")
 
-    note_text = st.text_area("Write something you want Mongo to remember")
+    note_text = st.text_area("Write something you want MemoBrain to remember")
     note_title = st.text_input("Optional title")
     note_tags = st.text_input("Tags (comma-separated)")
     note_category = st.selectbox("Category", ["", "idea", "meeting", "personal", "thought"])
@@ -215,9 +215,9 @@ with tabs[1]:
         context = format_context_with_metadata(top_chunks)
 
         if top_chunks:
-            st.caption(f"🧠 Mongo is answering based on {len(top_chunks)} memory snippet(s) with top similarity: {top_chunks[0]['score']:.3f}")
+            st.caption(f"🧠 MemoBrain is answering based on {len(top_chunks)} memory snippet(s) with top similarity: {top_chunks[0]['score']:.3f}")
         else:
-            st.caption("🧠 Mongo couldn't find anything relevant in memory.")
+            st.caption("🧠 MemoBrain couldn't find anything relevant in memory.")
         
         st.write("Debug — Top Chunks:", top_chunks)
 
@@ -227,7 +227,7 @@ with tabs[1]:
                 {
                     "role": "system",
                     "content": (
-                        "You are Mongo — a calm, helpful memory assistant. "
+                        "You are MemoBrain — a calm, helpful memory assistant. "
                         "You speak clearly and conversationally, like a natural assistant. "
                         "You are grounded — you only use information provided in the context. "
                         "If memory chunks are provided, always answer by referencing them. "
@@ -253,7 +253,7 @@ with tabs[1]:
         if msg["role"] == "user":
             st.markdown(f"🧍‍♂️ **You:** {msg['content']}")
         else:
-            st.markdown(f"🧠 Mongo** {msg['content']}")
+            st.markdown(f"🧠 MemoBrain** {msg['content']}")
 
     # Clear chat
     if st.button("🔁 Reset Conversation"):
