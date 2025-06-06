@@ -51,6 +51,6 @@ def retrieve_relevant_chunks(query: str, user_id: str, top_k=5) -> list[dict]:
     print("Query:", query)
     print("Top Matches:")
     for r in results:
-        print("-", r["title"], "| Score:", r.get("score"))
+        print("-", r.get("title", "[no title]"), "| Score:", r.get("score"))
 
     return results
