@@ -48,9 +48,9 @@ def retrieve_relevant_chunks(query: str, user_id: str, top_k=5) -> list[dict]:
             result["score"] = float(distances[0][i])
             results.append(result)
 
-    print("Query:", query)
-    print("Top Matches:")
-    for r in results:
-        print("-", r.get("title", "[no title]"), "| Score:", r.get("score"))
+    # print("Query:", query)
+    # print("Top Matches:")
+    # for r in results:
+    #     print("-", r.get("title", "[no title]"), "| Score:", r.get("score"))
 
     return results
