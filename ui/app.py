@@ -8,6 +8,8 @@ import os
 import openai
 import streamlit.components.v1 as components
 from dotenv import load_dotenv
+from core.memory_handler import sanitize_vector
+
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
@@ -175,7 +177,7 @@ with tabs[0]:
 
         chunks = chunk_text(note_text)
         vectors = embed_and_store(chunks, user_id)
-        entry["embedding_chunks"] = [{"text": c, "vector": v} for c, v in zip(chunks, vectors)]
+        entry["embedding_chunks"] = [{"text": c, "vector": sanitize_vector(v)} for c, v in zip(chunks, vectors)]
 
         # Append to memory_index.json
         memory_path = get_memory_index_path(user_id)
