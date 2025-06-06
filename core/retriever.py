@@ -45,6 +45,7 @@ def retrieve_relevant_chunks(query: str, user_id: str, top_k=5) -> list[dict]:
         str_idx = str(idx)
         if str_idx in metadata:
             result = metadata[str_idx]
+            result.setdefault("title", "[Untitled]")
             result["score"] = float(distances[0][i])
             results.append(result)
 
