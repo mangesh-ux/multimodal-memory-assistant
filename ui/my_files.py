@@ -66,7 +66,25 @@ def render_my_files_tab(user_id: str):
                     st.info("No summary found for this file.")
 
             if st.button("View Full Text", key=f"text_{i}"):
-                st.code(entry.get("text_preview", "No preview available."), language="text")
+                if entry["filetype"] in {"png", "jpg", "jpeg"} and entry["filepath"]:
+                    st.image(entry["filepath"], caption="Image Preview", use_column_width=True)
+                elif entry["filetype"] == "pdf":
+                    st.markdown("🔍 PDF uploaded. Text extracted is shown below.")
+                    st.code(entry.get("text_preview", ""), language="text")
+                elif entry["filetype"] == "txt":
+                    st.code(entry.get("text_preview", ""), language="text")
+                else:
+                    st.write("No text available.")
+
+            # Download button
+            if entry.get("filepath") and Path(entry["filepath"]).exists():
+                with open(entry["filepath"], "rb") as f:
+                    file_bytes = f.read()
+                st.download_button(
+                    label="📥 Download Original File",
+                    data=file_bytes,
+                    file_name=entry["filename"]
+                )
 
             if st.button("Delete", key=f"delete_{i}"):
                 memory.remove(entry)
