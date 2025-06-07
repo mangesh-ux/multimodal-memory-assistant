@@ -1,15 +1,21 @@
 # styles.py
-CARD_BG = "#f7f8fa"
-TEXT_COLOR = "#333"
-TAG_COLOR = "#efefef"
-PADDING = "1rem"
-RADIUS = "8px"
+LIGHT_CARD_BG = "#f7f8fa"
+DARK_CARD_BG = "#1e1e1e"
+LIGHT_TEXT_COLOR = "#333"
+DARK_TEXT_COLOR = "#eee"
 
-BORDER = "1px solid #ddd"
-SMALL_FONT = "0.85rem"
-MAX_WIDTH = "800px"
-
-# Optional additional color tokens
-ACCENT_COLOR = "#4f46e5"  # Indigo-600
-WARNING_COLOR = "#facc15"  # Yellow-400
-ERROR_COLOR = "#dc2626"    # Red-600
+# CSS variables
+CSS_VARIABLES = f"""
+<style>
+:root {{
+    --card-bg: {LIGHT_CARD_BG};
+    --text-color: {LIGHT_TEXT_COLOR};
+}}
+@media (prefers-color-scheme: dark) {{
+    :root {{
+        --card-bg: {DARK_CARD_BG};
+        --text-color: {DARK_TEXT_COLOR};
+    }}
+}}
+</style>
+"""

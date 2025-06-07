@@ -18,6 +18,7 @@ from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
 from core.user_paths import get_memory_index_path
 from ui.my_files import render_my_files_tab
+from ui.styles import CSS_VARIABLES
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -97,6 +98,8 @@ tabs = st.tabs(["📂 Memory", "📁 My Files", "💬 Ask"])
 # Memory Tab
 with tabs[0]:
     st.subheader("📂 Memory Manager")
+    st.markdown(CSS_VARIABLES, unsafe_allow_html=True)
+
 
     uploaded_files = st.file_uploader(
         "Upload one or more files (PDF, image, or text)",
@@ -132,7 +135,7 @@ with tabs[0]:
                             st.markdown("### 🧠 Summary by MemoBrain")
                             st.markdown(
                                 f"""
-                                <div style="background-color: #f7f8fa; padding: 1rem 1.2rem; border-radius: 8px; border: 1px solid #ddd;">
+                                <div style="background-color: var(--card-bg); padding: 1rem 1.2rem; border-radius: 8px; border: 1px solid #ddd; color: var(--text-color);">
                                 {summary}
                                 </div>
                                 """,
