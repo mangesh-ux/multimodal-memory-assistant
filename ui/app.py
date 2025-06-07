@@ -10,7 +10,6 @@ import streamlit.components.v1 as components
 from dotenv import load_dotenv
 from core.memory_handler import sanitize_vector
 
-
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from core.memory_handler import save_uploaded_file
@@ -18,6 +17,7 @@ from core.retriever import retrieve_relevant_chunks
 from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
 from core.user_paths import get_memory_index_path
+from ui.my_files import render_my_files_tab
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -92,7 +92,7 @@ if not st.session_state.authenticated:
 # --- Main UI ---
 user_id = st.session_state.user_id
 st.title("🧠 Multimodal Memory Assistant")
-tabs = st.tabs(["📂 Memory", "💬 Ask"])
+tabs = st.tabs(["📂 Memory", "📁 My Files", "💬 Ask"])
 
 # Memory Tab
 with tabs[0]:
@@ -195,9 +195,12 @@ with tabs[0]:
 
         st.success("Saved to memory ✅")
 
+# My files
+with tabs[1]:
+    render_my_files_tab(user_id)
 
 # Ask Tab
-with tabs[1]:
+with tabs[2]:
     st.subheader("💬 Ask Me Anything")
 
     # Initialize chat history
