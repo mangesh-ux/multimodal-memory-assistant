@@ -8,13 +8,12 @@ def render_my_files_tab(user_id: str):
 
     st.subheader("📁 My Files - MemoBrain")
 
-    # --- Filters (not functional yet) ---
+    # --- Filters (functional now) ---
     with st.sidebar:
         st.header("🔍 Filter Files")
-        search_query = st.text_input("Search by keyword")
-        selected_type = st.selectbox("File Type", ["All", "PDF", "Image", "Text", "Note"])
-        selected_category = st.selectbox("Category", ["All", "Personal", "Research", "Meeting", "Idea", "Thought"])
-        # date filter can be added later
+        search_query = st.text_input("Search by keyword").lower().strip()
+        selected_type = st.selectbox("File Type", ["All", "pdf", "image", "txt", "note"])
+        selected_category = st.selectbox("Category", ["All", "personal", "research", "meeting", "idea", "thought"])
 
     # --- Load memory index ---
     if memory_index_path.exists():
@@ -27,9 +26,34 @@ def render_my_files_tab(user_id: str):
         st.info("No files or notes found. Upload or add memory to get started.")
         return
 
-    st.subheader(f"📂 Showing {len(memory)} memory item(s)")
+    # --- Apply filters ---
+    def matches(entry):
+        if search_query:
+            combined_text = " ".join([
+                entry.get("title", ""),
+                entry.get("notes", ""),
+                " ".join(entry.get("tags", [])),
+                entry.get("text_preview", "")
+            ]).lower()
+            if search_query not in combined_text:
+                return False
 
-    for i, entry in enumerate(reversed(memory)):
+        if selected_type != "All":
+            if selected_type == "note" and entry.get("filepath"):
+                return False
+            if selected_type != "note" and entry.get("filetype") != selected_type:
+                return False
+
+        if selected_category != "All" and entry.get("category", "") != selected_category:
+            return False
+
+        return True
+
+    filtered_memory = [e for e in memory if matches(e)]
+
+    st.subheader(f"📂 Showing {len(filtered_memory)} matching item(s)")
+
+    for i, entry in enumerate(reversed(filtered_memory)):
         with st.expander(f"{entry.get('title') or entry['filename']}  •  {entry['filetype'].upper()}  •  Uploaded {entry['date_uploaded'][:10]}"):
             st.markdown(f"**Tags:** {', '.join(entry.get('tags', []))}  |  **Category:** {entry.get('category', '-')}")
             st.markdown(f"**Notes:** {entry.get('notes', '-')}")
