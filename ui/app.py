@@ -18,7 +18,7 @@ from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
 from core.user_paths import get_memory_index_path
 from ui.my_files import render_my_files_tab
-from ui.styles import CSS_VARIABLES
+from ui.styles import CSS_VARIABLES, CHAT_CSS
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -205,6 +205,8 @@ with tabs[1]:
 # Ask Tab
 with tabs[2]:
     st.subheader("💬 Ask Me Anything")
+    st.markdown(CHAT_CSS, unsafe_allow_html=True)
+
 
     # Initialize chat history
     if "chat_history" not in st.session_state:
@@ -257,11 +259,17 @@ with tabs[2]:
 
 
     # Display conversation
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
     for msg in st.session_state.chat_history:
-        if msg["role"] == "user":
-            st.markdown(f"🧍‍♂️ **You:** {msg['content']}")
-        else:
-            st.markdown(f"🧠 MemoBrain** {msg['content']}")
+        role = msg["role"]
+        bubble_class = "chat-user" if role == "user" else "chat-assistant"
+        content_html = st.markdown(msg["content"])._repr_markdown_() if role == "assistant" else msg["content"]
+        st.markdown(
+            f'<div class="chat-bubble {bubble_class}">{content_html}</div>',
+            unsafe_allow_html=True
+        )
+    st.markdown('</div>', unsafe_allow_html=True)
+
 
     # Clear chat
     if st.button("🔁 Reset Conversation"):
