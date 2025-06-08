@@ -23,6 +23,7 @@ from ui.styles import CSS_VARIABLES, CHAT_CSS
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+
 # --- Auth Helpers ---
 def hash_password(password):
     return hashlib.md5(password.encode()).hexdigest()
@@ -91,6 +92,8 @@ if not st.session_state.authenticated:
     st.stop()
 
 # --- Main UI ---
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 user_id = st.session_state.user_id
 st.title("🧠 Multimodal Memory Assistant")
 tabs = st.tabs(["📂 Memory", "📁 My Files", "💬 Ask"])
