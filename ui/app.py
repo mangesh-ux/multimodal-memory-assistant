@@ -211,11 +211,46 @@ with tabs[2]:
     # Initialize chat history
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
+    
+    # Display conversation
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    for msg in st.session_state.chat_history:
+        role = msg["role"]
+        bubble_class = "chat-user" if role == "user" else "chat-assistant"
+        content = msg["content"]
+        st.markdown(
+            f'<div class="chat-bubble {bubble_class}">{content}</div>',
+            unsafe_allow_html=True
+        )
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Scroll to bottom
+    components.html("<script>window.scrollTo(0, document.body.scrollHeight);</script>", height=0)
+
+    st.markdown(
+        """
+        <style>
+        .input-box {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            border-top: 1px solid #ddd;
+            border-radius: 0 0 10px 10px;
+            margin-top: 10px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+
 
     # Input area
+    st.markdown('<div class="input-box">', unsafe_allow_html=True)
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input("Your message", placeholder="Ask a question about your memories...")
         submitted = st.form_submit_button("Send")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     if submitted and user_input:
         # Append user message
@@ -256,19 +291,6 @@ with tabs[2]:
 
         assistant_reply = response.choices[0].message.content.strip()
         st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
-
-
-    # Display conversation
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-    for msg in st.session_state.chat_history:
-        role = msg["role"]
-        bubble_class = "chat-user" if role == "user" else "chat-assistant"
-        content = msg["content"]
-        st.markdown(
-            f'<div class="chat-bubble {bubble_class}">{content}</div>',
-            unsafe_allow_html=True
-        )
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 
