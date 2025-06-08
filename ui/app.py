@@ -24,10 +24,16 @@ st.sidebar.title("📁 MemoBrain Navigation")
 st.title("🧠 MemoBrain")
 
 # User authentication
-user_id = login_signup_ui()
-if not user_id or user_id.strip() == "":
-    st.error("Authentication failed. Please try again.")
+from ui.login import login_signup_ui
+
+if "is_authenticated" not in st.session_state:
+    st.session_state.is_authenticated = False
+
+if not st.session_state.is_authenticated:
+    user_id = login_signup_ui()
     st.stop()
+else:
+    user_id = st.session_state.user_id
 
 st.sidebar.success(f"👤 Logged in as: {user_id}")
 

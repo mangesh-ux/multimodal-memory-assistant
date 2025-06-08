@@ -1,5 +1,3 @@
-# ui/login.py
-
 import streamlit as st
 import bcrypt
 import json
@@ -25,38 +23,39 @@ def check_password(password, hashed):
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
 def login_signup_ui():
-    st.sidebar.title("🔐 Login / Sign Up")
+    if st.session_state.get("is_authenticated"):
+        return st.session_state.get("user_id")
 
-    action = st.sidebar.radio("Choose an option:", ["Login", "Sign Up"], key="auth_action")
+    st.title("🔐 Login / Sign Up")
 
-    username = st.sidebar.text_input("Username", key="auth_username")
-    password = st.sidebar.text_input("Password", type="password", key="auth_password")
-
-    if not username or not password:
-        return None
+    action = st.radio("Choose an option:", ["Login", "Sign Up"], key="auth_action")
+    username = st.text_input("Username", key="auth_username")
+    password = st.text_input("Password", type="password", key="auth_password")
 
     creds = load_credentials()
 
-    if action == "Login":
-        if username in creds["users"]:
-            stored_hash = creds["users"][username]["password"]
-            if check_password(password, stored_hash):
-                st.session_state.user_id = username
-                st.sidebar.success(f"Welcome back, {username}!")
+    if username and password:
+        if action == "Login":
+            if username in creds["users"]:
+                stored_hash = creds["users"][username]["password"]
+                if check_password(password, stored_hash):
+                    st.session_state.user_id = username
+                    st.session_state.is_authenticated = True
+                    st.success(f"Welcome back, {username}!")
+                    st.rerun()
+                else:
+                    st.error("Incorrect password.")
             else:
-                st.sidebar.error("Incorrect password.")
-        else:
-            st.sidebar.warning("Username not found.")
-    elif action == "Sign Up":
-        if username in creds["users"]:
-            st.sidebar.warning("Username already exists.")
-        else:
-            hashed = hash_password(password)
-            creds["users"][username] = {
-                "email": "",
-                "password": hashed
-            }
-            save_credentials(creds)
-            st.sidebar.success("User registered. Please login.")
+                st.warning("Username not found.")
+        elif action == "Sign Up":
+            if username in creds["users"]:
+                st.warning("Username already exists.")
+            else:
+                creds["users"][username] = {
+                    "email": "",
+                    "password": hash_password(password)
+                }
+                save_credentials(creds)
+                st.success("User registered! Please log in.")
 
-    return st.session_state.get("user_id", None)
+    return None
