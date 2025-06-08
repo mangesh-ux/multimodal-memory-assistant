@@ -28,34 +28,37 @@ def login_signup_ui():
 
     st.title("🔐 Login / Sign Up")
 
-    action = st.radio("Choose an option:", ["Login", "Sign Up"], key="auth_action")
-    username = st.text_input("Username", key="auth_username")
-    password = st.text_input("Password", type="password", key="auth_password")
+    with st.form("auth_form", clear_on_submit=True):
+        action = st.radio("Choose an option:", ["Login", "Sign Up"], key="auth_action")
+        username = st.text_input("Username", key="auth_username")
+        password = st.text_input("Password", type="password", key="auth_password")
+        submitted = st.form_submit_button("🔓 Submit")
 
-    creds = load_credentials()
+    if submitted:
+        creds = load_credentials()
 
-    if username and password:
-        if action == "Login":
-            if username in creds["users"]:
-                stored_hash = creds["users"][username]["password"]
-                if check_password(password, stored_hash):
-                    st.session_state.user_id = username
-                    st.session_state.is_authenticated = True
-                    st.success(f"Welcome back, {username}!")
-                    st.rerun()
+        if username and password:
+            if action == "Login":
+                if username in creds["users"]:
+                    stored_hash = creds["users"][username]["password"]
+                    if check_password(password, stored_hash):
+                        st.session_state.user_id = username
+                        st.session_state.is_authenticated = True
+                        st.success(f"Welcome back, {username}!")
+                        st.rerun()
+                    else:
+                        st.error("Incorrect password.")
                 else:
-                    st.error("Incorrect password.")
-            else:
-                st.warning("Username not found.")
-        elif action == "Sign Up":
-            if username in creds["users"]:
-                st.warning("Username already exists.")
-            else:
-                creds["users"][username] = {
-                    "email": "",
-                    "password": hash_password(password)
-                }
-                save_credentials(creds)
-                st.success("User registered! Please log in.")
+                    st.warning("Username not found.")
+            elif action == "Sign Up":
+                if username in creds["users"]:
+                    st.warning("Username already exists.")
+                else:
+                    creds["users"][username] = {
+                        "email": "",
+                        "password": hash_password(password)
+                    }
+                    save_credentials(creds)
+                    st.success("User registered! Please log in.")
 
     return None
