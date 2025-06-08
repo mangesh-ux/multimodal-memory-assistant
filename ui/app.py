@@ -5,6 +5,7 @@ from core.retriever import retrieve_relevant_chunks
 from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
 from core.user_paths import get_memory_index_path
+from ui.login import authenticate_user
 import json
 import os
 import openai
@@ -21,7 +22,7 @@ st.sidebar.title("📁 MemoBrain Navigation")
 page = st.sidebar.radio("Go to", ["My Files", "Memory", "Ask"])
 
 # Require login
-user_id = st.session_state.get("user_id")
+user_id = authenticate_user()
 if not user_id:
     st.error("Please log in to access MemoBrain.")
     st.stop()

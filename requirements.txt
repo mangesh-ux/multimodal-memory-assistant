@@ -8,3 +8,4 @@ faiss-cpu
 pytesseract 
 pdf2image 
 pillow
+streamlit-login-auth-ui
