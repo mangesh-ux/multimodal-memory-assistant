@@ -13,7 +13,7 @@ from core.retriever import retrieve_relevant_chunks
 from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
 from core.user_paths import get_memory_index_path
-from ui.login import authenticate_user
+from ui.login import login_signup_ui
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -24,7 +24,7 @@ st.sidebar.title("📁 MemoBrain Navigation")
 st.title("🧠 MemoBrain")
 
 # User authentication
-user_id = authenticate_user()
+user_id = login_signup_ui()
 if not user_id or user_id.strip() == "":
     st.error("Authentication failed. Please try again.")
     st.stop()
