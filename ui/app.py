@@ -11,22 +11,27 @@ import openai
 import hashlib
 from datetime import datetime
 from dotenv import load_dotenv
-load_dotenv()
 
+load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Setup
 st.set_page_config(page_title="MemoBrain", layout="wide")
 st.sidebar.title("📁 MemoBrain Navigation")
-page = st.sidebar.radio("Go to", ["My Files", "Memory", "Ask Mongo"])
+page = st.sidebar.radio("Go to", ["My Files", "Memory", "Ask"])
 
-# Temp hardcoded user
-user_id = "demo_user"
+# Require login
+user_id = st.session_state.get("user_id")
+if not user_id:
+    st.error("Please log in to access MemoBrain.")
+    st.stop()
 
+# My Files
 if page == "My Files":
     st.title("🗂️ Your Files")
     render_my_files_tab(user_id)
 
+# Memory Tab
 elif page == "Memory":
     st.title("📂 Memory Manager")
 
@@ -72,7 +77,6 @@ elif page == "Memory":
 
     if st.button("Save Note"):
         from core.preprocess import chunk_text
-
         chunks = chunk_text(note_text)
         vectors = embed_and_store(chunks, user_id)
 
@@ -97,8 +101,9 @@ elif page == "Memory":
 
         st.success("Saved to memory ✅")
 
-elif page == "Ask Mongo":
-    st.title("💬 Ask Mongo")
+# Ask Tab
+elif page == "Ask":
+    st.title("💬 Ask MemoBrain")
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
@@ -115,7 +120,7 @@ elif page == "Ask Mongo":
         context = format_context_with_metadata(top_chunks)
 
         system_prompt = (
-            "You are Mongo — a calm, helpful memory assistant. "
+            "You are MemoBrain — a calm, helpful memory assistant. "
             "You speak clearly and conversationally. You only use memory provided in context. "
             "If memory chunks have date/title/notes, mention that. If unsure, say you don’t know."
         )
