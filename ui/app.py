@@ -203,68 +203,30 @@ with tabs[1]:
     render_my_files_tab(user_id)
 
 # Ask Tab
+# Ask Tab
 with tabs[2]:
     st.subheader("💬 Ask Me Anything")
-    st.markdown(CHAT_CSS, unsafe_allow_html=True)
 
-
-    # Initialize chat history
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
-    
-    # Display conversation
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+
+    # Display previous messages
     for msg in st.session_state.chat_history:
-        role = msg["role"]
-        bubble_class = "chat-user" if role == "user" else "chat-assistant"
-        content = msg["content"]
-        st.markdown(
-            f'<div class="chat-bubble {bubble_class}">{content}</div>',
-            unsafe_allow_html=True
-        )
-    st.markdown('</div>', unsafe_allow_html=True)
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-    # Scroll to bottom
-    components.html("<script>window.scrollTo(0, document.body.scrollHeight);</script>", height=0)
+    # Chat input at the bottom
+    if prompt := st.chat_input("Ask a question about your memories..."):
+        st.chat_message("user").markdown(prompt)
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
 
-    st.markdown(
-        """
-        <style>
-        .input-box {
-            background-color: var(--card-bg);
-            padding: 1rem;
-            border-top: 1px solid #ddd;
-            border-radius: 0 0 10px 10px;
-            margin-top: 10px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-
-
-    # Input area
-    st.markdown('<div class="input-box">', unsafe_allow_html=True)
-    with st.form("chat_form", clear_on_submit=True):
-        user_input = st.text_input("Your message", placeholder="Ask a question about your memories...")
-        submitted = st.form_submit_button("Send")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    if submitted and user_input:
-        # Append user message
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
-
-        top_chunks = retrieve_relevant_chunks(user_input, user_id=user_id, top_k=5)
+        top_chunks = retrieve_relevant_chunks(prompt, user_id=user_id, top_k=5)
         context = format_context_with_metadata(top_chunks)
 
         if top_chunks:
-            st.caption(f"🧠 MemoBrain is answering based on {len(top_chunks)} memory snippet(s) with top similarity: {top_chunks[0]['score']:.3f}")
+            st.caption(f"🧠 Mongo is answering based on {len(top_chunks)} memory snippet(s) with top similarity: {top_chunks[0]['score']:.3f}")
         else:
-            st.caption("🧠 MemoBrain couldn't find anything relevant in memory.")
-        
-        # st.write("Debug — Top Chunks:", top_chunks)
+            st.caption("🧠 Mongo couldn't find anything relevant in memory.")
 
         response = openai.chat.completions.create(
             model="gpt-4",
@@ -272,7 +234,7 @@ with tabs[2]:
                 {
                     "role": "system",
                     "content": (
-                        "You are MemoBrain — a calm, helpful memory assistant. "
+                        "You are Mongo — a calm, helpful memory assistant. "
                         "You speak clearly and conversationally, like a natural assistant. "
                         "You are grounded — you only use information provided in the context. "
                         "If memory chunks are provided, always answer by referencing them. "
@@ -280,19 +242,20 @@ with tabs[2]:
                         "If you don't know something from context, confidently say you don't know. "
                         "Use markdown when it helps make the answer easier to read (e.g. for bullet points, headings, code, or bold emphasis)."
                     )
-                }
-,
+                },
                 {
-                    "role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{user_input}"
+                    "role": "user",
+                    "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"
                 }
             ]
         )
 
-
         assistant_reply = response.choices[0].message.content.strip()
+
+        with st.chat_message("assistant"):
+            st.markdown(assistant_reply)
+
         st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
-
-
 
     # Clear chat
     if st.button("🔁 Reset Conversation"):
