@@ -263,12 +263,13 @@ with tabs[2]:
     for msg in st.session_state.chat_history:
         role = msg["role"]
         bubble_class = "chat-user" if role == "user" else "chat-assistant"
-        content_html = st.markdown(msg["content"])._repr_markdown_() if role == "assistant" else msg["content"]
+        content = msg["content"]
         st.markdown(
-            f'<div class="chat-bubble {bubble_class}">{content_html}</div>',
+            f'<div class="chat-bubble {bubble_class}">{content}</div>',
             unsafe_allow_html=True
         )
     st.markdown('</div>', unsafe_allow_html=True)
+
 
 
     # Clear chat
