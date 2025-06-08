@@ -234,7 +234,7 @@ with tabs[2]:
             model="gpt-4",
             messages=[
                 {"role": "system", "content": (
-                    "You are Mongo — a calm, helpful memory assistant. "
+                    "You are MemoBrain — a calm, helpful memory assistant. "
                     "Only use provided context. Do not guess. Be concise and accurate."
                 )},
                 {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"}
