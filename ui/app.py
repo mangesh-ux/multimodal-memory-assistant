@@ -96,7 +96,7 @@ elif page == "🧠 Memory Manager":
             "filepath": "",
             "text_preview": note_text[:500],
             "date_uploaded": datetime.now().isoformat(),
-            "embedding_chunks": [{"text": c, "vector": v} for c, v in zip(chunks, vectors)],
+            "embedding_chunks": [{"text": c, "vector": v.tolist() if hasattr(v, 'tolist') else v} for c, v in zip(chunks, vectors)],
             "source_hash": hashlib.md5(note_text.encode()).hexdigest(),
             "title": note_title,
             "tags": [t.strip() for t in note_tags.split(",") if t],
