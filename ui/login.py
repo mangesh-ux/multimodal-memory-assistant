@@ -16,41 +16,54 @@ def save_users(users):
     with open(USER_DB, "w", encoding="utf-8") as f:
         json.dump(users, f, indent=2)
 
+def attempt_auth(mode, username, password):
+    if not username or not password:
+        st.session_state.auth_error = "Please enter both username and password."
+        return
+
+    users = load_users()
+
+    if mode == "Login":
+        if username not in users:
+            st.session_state.auth_error = "User does not exist. Please sign up first."
+            return
+        if users[username] != password:
+            st.session_state.auth_error = "Incorrect password."
+            return
+        st.session_state.user_id = username
+    else:  # Sign Up
+        if username in users:
+            st.session_state.auth_error = "Username already exists. Try logging in instead."
+            return
+        users[username] = password
+        save_users(users)
+        st.session_state.user_id = username
+
 def login_screen():
     st.markdown("## 🔐 Login / Sign Up")
 
-    with st.form("auth_form", clear_on_submit=False):
-        mode = st.radio("Choose an option:", ["Login", "Sign Up"], horizontal=True)
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submit = st.form_submit_button("🔓 Submit")
+    if "auth_error" in st.session_state:
+        st.error(st.session_state.auth_error)
 
-    if submit:
-        if not username or not password:
-            st.warning("Please enter both username and password.")
-            return None
+    if "auth_mode" not in st.session_state:
+        st.session_state.auth_mode = "Login"
 
-        users = load_users()
+    st.radio(
+        "Choose an option:",
+        ["Login", "Sign Up"],
+        index=0 if st.session_state.auth_mode == "Login" else 1,
+        horizontal=True,
+        key="auth_mode"
+    )
 
-        if mode == "Login":
-            if username not in users:
-                st.error("User does not exist. Please sign up first.")
-                return None
-            if users[username] != password:
-                st.error("Incorrect password.")
-                return None
-            st.session_state.user_id = username
-            return username
+    username = st.text_input("Username", key="auth_username")
+    password = st.text_input("Password", type="password", key="auth_password")
 
-        else:  # Sign Up
-            if username in users:
-                st.error("Username already exists. Try logging in instead.")
-                return None
-            users[username] = password
-            save_users(users)
-            st.success(f"Account created! Welcome, {username}!")
-            st.session_state.user_id = username
-            return username
+    st.button(
+        "🔓 Submit",
+        on_click=attempt_auth,
+        args=(st.session_state.auth_mode, username, password)
+    )
 
 def get_logged_in_user():
     return st.session_state.get("user_id")

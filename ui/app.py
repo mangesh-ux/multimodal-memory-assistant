@@ -20,7 +20,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Setup
 st.set_page_config(page_title="MemoBrain", layout="wide")
-st.title("🧠 MemoBrain")
+st.title("MemoBrain File Manager")
 
 # User authentication
 user_id = get_logged_in_user()
@@ -34,7 +34,7 @@ st.sidebar.success(f"👤 Logged in as: {user_id}")
 page = st.sidebar.selectbox("Navigate", ["📁 My Files", "🧠 Memory Manager", "💬 Ask MemoBrain"])
 # My Files
 if page == "📁 My Files":
-    st.title("🗂️ Your Files")
+    # st.title("🗂️ Your Files")
     render_my_files_tab(user_id)
 
 # Memory Tab
@@ -77,7 +77,7 @@ elif page == "🧠 Memory Manager":
 
     # Add a manual note
     st.divider()
-    st.subheader("🧠 Add a Manual Note")
+    st.subheader("Add a Manual Note")
     note_text = st.text_area("Memory Content")
     note_title = st.text_input("Optional title")
     note_tags = st.text_input("Tags (comma-separated)")
