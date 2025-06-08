@@ -32,15 +32,16 @@ if not user_id:
 
 st.sidebar.success(f"👤 Logged in as: {user_id}")
 
-page = st.sidebar.radio("Go to", ["My Files", "📁 Memory Manager", "💬 Ask"])
+page = st.sidebar.selectbox("Navigate", ["📁 My Files", "🧠 Memory Manager", "💬 Ask MemoBrain"])
 # My Files
-if page == "My Files":
+if page == "📁 My Files":
     st.title("🗂️ Your Files")
     render_my_files_tab(user_id)
 
 # Memory Tab
-elif page == "📁 Memory Manager":
-    st.title("📂 Memory Manager")
+elif page == "🧠 Memory Manager":
+    st.title("🧠 Memory Manager")
+    st.markdown("Upload documents or write memory notes. Everything becomes searchable.")
 
     uploaded_files = st.file_uploader(
         "Upload one or more files (PDF, image, or text)",
@@ -52,6 +53,7 @@ elif page == "📁 Memory Manager":
         st.write("### Enter details for each uploaded file")
 
         for uploaded_file in uploaded_files:
+            st.markdown("### 📄 File Metadata")
             with st.expander(f"📝 {uploaded_file.name}"):
                 title = st.text_input(f"Title for {uploaded_file.name}", key=f"title_{uploaded_file.name}")
                 tags_input = st.text_input(f"Tags (comma-separated)", key=f"tags_{uploaded_file.name}")
@@ -65,7 +67,7 @@ elif page == "📁 Memory Manager":
                     )
                     st.success(f"{uploaded_file.name} saved to memory ✅")
                     if summary:
-                        st.markdown("#### 🧠 Summary by MemoBrain")
+                        st.markdown("#### 🧠 Auto Summary")
                         st.markdown(f"""
                             <div style="background-color:#f0f2f6;padding:1rem;border-radius:8px;border:1px solid #ccc;">
                                 {summary}
@@ -75,8 +77,9 @@ elif page == "📁 Memory Manager":
                         st.info("[No summary generated for short file.]")
 
     # Add a manual note
-    st.subheader("🧠 Add a Memory Note")
-    note_text = st.text_area("Write something you want MemoBrain to remember")
+    st.divider()
+    st.subheader("🧠 Add a Manual Note")
+    note_text = st.text_area("Memory Content")
     note_title = st.text_input("Optional title")
     note_tags = st.text_input("Tags (comma-separated)")
     note_category = st.selectbox("Category", ["", "idea", "meeting", "personal", "thought"])
@@ -106,11 +109,13 @@ elif page == "📁 Memory Manager":
         memory.append(entry)
         json.dump(memory, open(memory_path, "w"), indent=2)
 
-        st.success("Saved to memory ✅")
+        st.success("✅ Note saved to memory.")
 
 # Ask Tab
-elif page == "💬 Ask":
+elif page == "💬 Ask MemoBrain":
     st.title("💬 Ask MemoBrain")
+    st.markdown("Ask any question. MemoBrain will answer based on your uploaded memory.")
+
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
@@ -128,8 +133,7 @@ elif page == "💬 Ask":
 
         system_prompt = (
             "You are MemoBrain — a calm, helpful memory assistant. "
-            "You speak clearly and conversationally. You only use memory provided in context. "
-            "If memory chunks have date/title/notes, mention that. If unsure, say you don’t know."
+            "You should summarize clearly, reference file titles and dates when available, and admit when unsure."
         )
 
         response = openai.chat.completions.create(
