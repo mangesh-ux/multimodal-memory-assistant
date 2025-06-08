@@ -199,26 +199,21 @@ with tabs[0]:
         st.success("Saved to memory ✅")
 
 # My files
-with tabs[1]:
-    render_my_files_tab(user_id)
-
-# Ask Tab
-# Ask Tab
 # Ask Tab
 with tabs[2]:
+    st.markdown("<style>.stChatMessage { margin-bottom: 0.75rem; }</style>", unsafe_allow_html=True)
     st.subheader("💬 Ask Me Anything")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    chat_container = st.container()
-
-    with chat_container:
+    # Container with scrollable behavior (optional style tweak for long chats)
+    with st.container():
         for msg in st.session_state.chat_history:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-    # Place input box LAST so new messages appear above
+    # Input stays fixed at bottom, messages appear above it
     prompt = st.chat_input("Ask a question about your memories...")
     if prompt:
         with st.chat_message("user"):
@@ -229,22 +224,19 @@ with tabs[2]:
         context = format_context_with_metadata(top_chunks)
 
         st.caption(
-            f"🧠 Mongo is answering based on {len(top_chunks)} memory snippet(s) "
+            f"🧠 MemoBrain is answering based on {len(top_chunks)} memory snippet(s) "
             f"with top similarity: {top_chunks[0]['score']:.3f}" if top_chunks else
-            "🧠 Mongo couldn't find anything relevant in memory."
+            "🧠 MemoBrain couldn't find anything relevant in memory."
         )
 
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": (
-                    "You are Mongo — a calm, helpful memory assistant. "
-                    "You speak clearly and conversationally, like a natural assistant. "
-                    "You are grounded — you only use information provided in the context. "
-                    "If memory chunks are provided, always answer by referencing them. "
-                    "If a memory chunk includes a date, title, or notes, clarify that you're recalling from that memory. "
-                    "If you don't know something from context, confidently say you don't know. "
-                    "Use markdown when it helps make the answer easier to read (e.g. for bullet points, headings, code, or bold emphasis)."
+                    "You are MemoBrain — a calm, helpful memory assistant. "
+                    "You speak clearly and conversationally. Use memory chunks when provided. "
+                    "If memory has a title or date, acknowledge it in your answer. "
+                    "Avoid hallucinating if no memory matches. Use markdown to structure answers clearly."
                 )},
                 {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"}
             ]
@@ -255,6 +247,11 @@ with tabs[2]:
             st.markdown(assistant_reply)
 
         st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
+
+    # Reset chat
+    if st.button("🔁 Reset Conversation"):
+        st.session_state.chat_history = []
+        st.rerun()
 
 
     # Clear chat
