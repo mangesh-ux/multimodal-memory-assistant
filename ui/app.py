@@ -204,58 +204,58 @@ with tabs[1]:
 
 # Ask Tab
 # Ask Tab
+# Ask Tab
 with tabs[2]:
     st.subheader("💬 Ask Me Anything")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # Display previous messages
-    for msg in st.session_state.chat_history:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+    chat_container = st.container()
 
-    # Chat input at the bottom
-    if prompt := st.chat_input("Ask a question about your memories..."):
-        st.chat_message("user").markdown(prompt)
+    with chat_container:
+        for msg in st.session_state.chat_history:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+
+    # Place input box LAST so new messages appear above
+    prompt = st.chat_input("Ask a question about your memories...")
+    if prompt:
+        with st.chat_message("user"):
+            st.markdown(prompt)
         st.session_state.chat_history.append({"role": "user", "content": prompt})
 
         top_chunks = retrieve_relevant_chunks(prompt, user_id=user_id, top_k=5)
         context = format_context_with_metadata(top_chunks)
 
-        if top_chunks:
-            st.caption(f"🧠 Mongo is answering based on {len(top_chunks)} memory snippet(s) with top similarity: {top_chunks[0]['score']:.3f}")
-        else:
-            st.caption("🧠 Mongo couldn't find anything relevant in memory.")
+        st.caption(
+            f"🧠 Mongo is answering based on {len(top_chunks)} memory snippet(s) "
+            f"with top similarity: {top_chunks[0]['score']:.3f}" if top_chunks else
+            "🧠 Mongo couldn't find anything relevant in memory."
+        )
 
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are Mongo — a calm, helpful memory assistant. "
-                        "You speak clearly and conversationally, like a natural assistant. "
-                        "You are grounded — you only use information provided in the context. "
-                        "If memory chunks are provided, always answer by referencing them. "
-                        "If a memory chunk includes a date, title, or notes, clarify that you're recalling from that memory. "
-                        "If you don't know something from context, confidently say you don't know. "
-                        "Use markdown when it helps make the answer easier to read (e.g. for bullet points, headings, code, or bold emphasis)."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"
-                }
+                {"role": "system", "content": (
+                    "You are Mongo — a calm, helpful memory assistant. "
+                    "You speak clearly and conversationally, like a natural assistant. "
+                    "You are grounded — you only use information provided in the context. "
+                    "If memory chunks are provided, always answer by referencing them. "
+                    "If a memory chunk includes a date, title, or notes, clarify that you're recalling from that memory. "
+                    "If you don't know something from context, confidently say you don't know. "
+                    "Use markdown when it helps make the answer easier to read (e.g. for bullet points, headings, code, or bold emphasis)."
+                )},
+                {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"}
             ]
         )
 
         assistant_reply = response.choices[0].message.content.strip()
-
         with st.chat_message("assistant"):
             st.markdown(assistant_reply)
 
         st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
+
 
     # Clear chat
     if st.button("🔁 Reset Conversation"):
