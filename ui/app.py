@@ -206,7 +206,6 @@ with tabs[1]:
     render_my_files_tab(user_id)
 
 # Ask Tab
-# Ask Tab
 with tabs[2]:
     st.subheader("💬 Ask Me Anything")
 
@@ -262,7 +261,7 @@ with tabs[2]:
             st.markdown(reply)
         st.session_state.chat_history.append({"role": "assistant", "content": reply})
 
-# 🔁 Reset button
-if st.button("🔁 Reset Conversation"):
-    st.session_state.chat_history = []
-    st.rerun()
+    # 🔁 Reset button
+    if st.button("🔁 Reset Conversation"):
+        st.session_state.chat_history = []
+        st.rerun()
