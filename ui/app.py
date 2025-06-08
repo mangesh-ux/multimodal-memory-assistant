@@ -1,4 +1,12 @@
 import streamlit as st
+import json
+import os
+import openai
+import hashlib
+from datetime import datetime
+from dotenv import load_dotenv
+import sys
+
 from ui.my_files import render_my_files_tab
 from core.memory_handler import save_uploaded_file
 from core.retriever import retrieve_relevant_chunks
@@ -6,12 +14,6 @@ from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
 from core.user_paths import get_memory_index_path
 from ui.login import authenticate_user
-import json
-import os
-import openai
-import hashlib
-from datetime import datetime
-from dotenv import load_dotenv
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -19,21 +21,24 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # Setup
 st.set_page_config(page_title="MemoBrain", layout="wide")
 st.sidebar.title("📁 MemoBrain Navigation")
-page = st.sidebar.radio("Go to", ["My Files", "Memory", "Ask"])
+st.title("🧠 MemoBrain")
 
-# Require login
+# User authentication
 user_id = authenticate_user()
-if not user_id:
-    st.error("Please log in to access MemoBrain.")
+if not user_id or user_id.strip() == "":
+    st.error("Authentication failed. Please try again.")
     st.stop()
 
+st.sidebar.success(f"👤 Logged in as: {user_id}")
+
+page = st.sidebar.radio("Go to", ["My Files", "📁 Memory Manager", "💬 Ask"])
 # My Files
 if page == "My Files":
     st.title("🗂️ Your Files")
     render_my_files_tab(user_id)
 
 # Memory Tab
-elif page == "Memory":
+elif page == "📁 Memory Manager":
     st.title("📂 Memory Manager")
 
     uploaded_files = st.file_uploader(
@@ -103,7 +108,7 @@ elif page == "Memory":
         st.success("Saved to memory ✅")
 
 # Ask Tab
-elif page == "Ask":
+elif page == "💬 Ask":
     st.title("💬 Ask MemoBrain")
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
