@@ -4,26 +4,48 @@ from core.user_paths import get_memory_index_path
 from ui.file_cards import render_file_card
 from ui.styles import CSS_VARIABLES
 
-def render_my_files_tab(user_id):
+def render_my_files_tab(user_id: str):
     st.subheader("🗂️ My Files")
-    st.markdown(CSS_VARIABLES, unsafe_allow_html=True)
 
-    memory_path = get_memory_index_path(user_id)
-    if not memory_path.exists():
+    memory_index_path = get_memory_index_path(user_id)
+
+    if not memory_index_path.exists():
         st.info("No files found.")
         return
 
-    with open(memory_path, "r") as f:
+    with open(memory_index_path, "r") as f:
         try:
             memory = json.load(f)
         except json.JSONDecodeError:
-            st.error("Memory index is corrupted.")
+            st.error("Corrupted memory index.")
             return
 
-    if not memory:
-        st.info("No memory entries yet.")
-        return
+    # Sidebar Filters (inside expander for cleanliness)
+    with st.expander("🔍 Filters", expanded=True):
+        categories = sorted(set(item.get("category", "") for item in memory))
+        selected_category = st.selectbox("Filter by Category", ["All"] + categories)
 
-    # Display each file as a card
-    for entry in reversed(memory):
-        render_file_card(entry, user_id)
+        search_text = st.text_input("Search by Title or Tags")
+
+    # Apply filters
+    filtered_memory = []
+    for item in memory:
+        title = item.get("title", "").lower()
+        tags = [t.lower() for t in item.get("tags", [])]
+        category = item.get("category", "")
+
+        if selected_category != "All" and category != selected_category:
+            continue
+
+        if search_text:
+            if search_text.lower() not in title and all(search_text.lower() not in tag for tag in tags):
+                continue
+
+        filtered_memory.append(item)
+
+    if not filtered_memory:
+        st.warning("No results found.")
+    else:
+        for item in filtered_memory:
+            render_file_card(item, user_id)
+

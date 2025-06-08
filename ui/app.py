@@ -203,55 +203,54 @@ with tabs[1]:
     render_my_files_tab(user_id)
 
 # Ask Tab
+# Ask Tab
 with tabs[2]:
-    st.markdown("<style>.stChatMessage { margin-bottom: 0.75rem; }</style>", unsafe_allow_html=True)
     st.subheader("💬 Ask Me Anything")
 
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # Container with scrollable behavior (optional style tweak for long chats)
-    with st.container():
-        for msg in st.session_state.chat_history:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
+    # Display past messages
+    for msg in st.session_state.chat_history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-    # Input stays fixed at bottom, messages appear above it
-    prompt = st.chat_input("Ask a question about your memories...")
-    if prompt:
+    # Chat input at the bottom
+    user_input = st.chat_input("Ask a question about your memories...")
+
+    if user_input:
+        # Show user message
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
-            st.markdown(prompt)
-        st.session_state.chat_history.append({"role": "user", "content": prompt})
+            st.markdown(user_input)
 
-        top_chunks = retrieve_relevant_chunks(prompt, user_id=user_id, top_k=5)
+        # RAG retrieval
+        top_chunks = retrieve_relevant_chunks(user_input, user_id=user_id, top_k=5)
         context = format_context_with_metadata(top_chunks)
 
-        st.caption(
-            f"🧠 MemoBrain is answering based on {len(top_chunks)} memory snippet(s) "
-            f"with top similarity: {top_chunks[0]['score']:.3f}" if top_chunks else
-            "🧠 MemoBrain couldn't find anything relevant in memory."
-        )
+        if top_chunks:
+            st.caption(f"Mongo is answering from {len(top_chunks)} memory snippet(s) (Top score: {top_chunks[0]['score']:.3f})")
+        else:
+            st.caption("Mongo couldn't find anything relevant in memory.")
 
+        # LLM call
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": (
-                    "You are MemoBrain — a calm, helpful memory assistant. "
-                    "You speak clearly and conversationally. Use memory chunks when provided. "
-                    "If memory has a title or date, acknowledge it in your answer. "
-                    "Avoid hallucinating if no memory matches. Use markdown to structure answers clearly."
+                    "You are Mongo — a helpful personal memory assistant. "
+                    "Only answer based on provided memory context. If uncertain, say so clearly. "
+                    "Use markdown to enhance clarity."
                 )},
-                {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"}
+                {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{user_input}"}
             ]
         )
-
         assistant_reply = response.choices[0].message.content.strip()
+        st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
         with st.chat_message("assistant"):
             st.markdown(assistant_reply)
 
-        st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
-
-    # Reset chat
+    # Reset conversation button
     if st.button("🔁 Reset Conversation"):
         st.session_state.chat_history = []
         st.rerun()
