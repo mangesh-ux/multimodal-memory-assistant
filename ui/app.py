@@ -209,59 +209,44 @@ with tabs[1]:
 with tabs[2]:
     st.subheader("💬 Ask Me Anything")
 
-    # Display chat history
+    # Show chat history first
     for msg in st.session_state.chat_history:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Input box at the bottom
-    user_input = st.chat_input("Ask a question about your memories...")
-
-    if user_input:
-        # Store user message
-        st.session_state.chat_history.append({"role": "user", "content": user_input})
+    # Show chat input at the bottom
+    if prompt := st.chat_input("Ask a question about your memories..."):
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
-            st.markdown(user_input)
+            st.markdown(prompt)
 
-        # Run your memory retriever
-        top_chunks = retrieve_relevant_chunks(user_input, user_id=user_id, top_k=5)
+        # Fetch top chunks from memory
+        top_chunks = retrieve_relevant_chunks(prompt, user_id=user_id, top_k=5)
         context = format_context_with_metadata(top_chunks)
 
-        # Display top chunk info
         if top_chunks:
             st.caption(f"🧠 MemoBrain is answering based on {len(top_chunks)} memory snippet(s) (Top score: {top_chunks[0].get('score', 0):.3f})")
         else:
             st.caption("🧠 MemoBrain couldn't find anything relevant in memory.")
 
-        # Prepare LLM prompt
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You are Mongo — a calm, helpful memory assistant. "
-                    "Only answer using the memory context provided. "
-                    "If you don't know something, say you don't know."
-                )
-            },
-            {
-                "role": "user",
-                "content": f"Context:\n{context}\n\nQuestion:\n{user_input}"
-            }
-        ]
-
+        # Generate response
         response = openai.chat.completions.create(
             model="gpt-4",
-            messages=messages
+            messages=[
+                {"role": "system", "content": (
+                    "You are Mongo — a calm, helpful memory assistant. "
+                    "Only use provided context. Do not guess. Be concise and accurate."
+                )},
+                {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"}
+            ]
         )
 
         reply = response.choices[0].message.content.strip()
-
-        # Show assistant response
+        st.session_state.chat_history.append({"role": "assistant", "content": reply})
         with st.chat_message("assistant"):
             st.markdown(reply)
-        st.session_state.chat_history.append({"role": "assistant", "content": reply})
 
-    # 🔁 Reset button
+    # Optional reset button (does not interfere with input)
     if st.button("🔁 Reset Conversation"):
         st.session_state.chat_history = []
         st.rerun()
