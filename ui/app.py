@@ -199,6 +199,9 @@ with tabs[0]:
         st.success("Saved to memory ✅")
 
 # My files
+with tabs[1]:
+    render_my_files_tab(user_id)
+
 # Ask Tab
 with tabs[2]:
     st.markdown("<style>.stChatMessage { margin-bottom: 0.75rem; }</style>", unsafe_allow_html=True)
@@ -249,12 +252,6 @@ with tabs[2]:
         st.session_state.chat_history.append({"role": "assistant", "content": assistant_reply})
 
     # Reset chat
-    if st.button("🔁 Reset Conversation"):
-        st.session_state.chat_history = []
-        st.rerun()
-
-
-    # Clear chat
     if st.button("🔁 Reset Conversation"):
         st.session_state.chat_history = []
         st.rerun()
