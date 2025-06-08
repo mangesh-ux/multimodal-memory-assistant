@@ -229,7 +229,7 @@ with tabs[2]:
         else:
             st.caption("🧠 MemoBrain couldn't find anything relevant in memory.")
         
-        st.write("Debug — Top Chunks:", top_chunks)
+        # st.write("Debug — Top Chunks:", top_chunks)
 
         response = openai.chat.completions.create(
             model="gpt-4",
