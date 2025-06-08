@@ -23,9 +23,9 @@ def login_screen():
         mode = st.radio("Choose an option:", ["Login", "Sign Up"], horizontal=True)
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-        submit = st.form_submit_button("🔓 Submit")
+        # submit = st.form_submit_button("🔓 Submit")
 
-        if submit:
+        if st.form_submit_button("🔓 Submit"):
             if not username or not password:
                 st.warning("Please enter both username and password.")
                 return None
