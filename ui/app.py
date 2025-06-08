@@ -211,56 +211,56 @@ with tabs[2]:
     st.subheader("💬 Ask Me Anything")
 
     # Display chat history
-for msg in st.session_state.chat_history:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+    for msg in st.session_state.chat_history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-# Input box at the bottom
-user_input = st.chat_input("Ask a question about your memories...")
+    # Input box at the bottom
+    user_input = st.chat_input("Ask a question about your memories...")
 
-if user_input:
-    # Store user message
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
+    if user_input:
+        # Store user message
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
 
-    # Run your memory retriever
-    top_chunks = retrieve_relevant_chunks(user_input, user_id=user_id, top_k=5)
-    context = format_context_with_metadata(top_chunks)
+        # Run your memory retriever
+        top_chunks = retrieve_relevant_chunks(user_input, user_id=user_id, top_k=5)
+        context = format_context_with_metadata(top_chunks)
 
-    # Display top chunk info
-    if top_chunks:
-        st.caption(f"🧠 MemoBrain is answering based on {len(top_chunks)} memory snippet(s) (Top score: {top_chunks[0].get('score', 0):.3f})")
-    else:
-        st.caption("🧠 MemoBrain couldn't find anything relevant in memory.")
+        # Display top chunk info
+        if top_chunks:
+            st.caption(f"🧠 MemoBrain is answering based on {len(top_chunks)} memory snippet(s) (Top score: {top_chunks[0].get('score', 0):.3f})")
+        else:
+            st.caption("🧠 MemoBrain couldn't find anything relevant in memory.")
 
-    # Prepare LLM prompt
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are Mongo — a calm, helpful memory assistant. "
-                "Only answer using the memory context provided. "
-                "If you don't know something, say you don't know."
-            )
-        },
-        {
-            "role": "user",
-            "content": f"Context:\n{context}\n\nQuestion:\n{user_input}"
-        }
-    ]
+        # Prepare LLM prompt
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are Mongo — a calm, helpful memory assistant. "
+                    "Only answer using the memory context provided. "
+                    "If you don't know something, say you don't know."
+                )
+            },
+            {
+                "role": "user",
+                "content": f"Context:\n{context}\n\nQuestion:\n{user_input}"
+            }
+        ]
 
-    response = openai.chat.completions.create(
-        model="gpt-4",
-        messages=messages
-    )
+        response = openai.chat.completions.create(
+            model="gpt-4",
+            messages=messages
+        )
 
-    reply = response.choices[0].message.content.strip()
+        reply = response.choices[0].message.content.strip()
 
-    # Show assistant response
-    with st.chat_message("assistant"):
-        st.markdown(reply)
-    st.session_state.chat_history.append({"role": "assistant", "content": reply})
+        # Show assistant response
+        with st.chat_message("assistant"):
+            st.markdown(reply)
+        st.session_state.chat_history.append({"role": "assistant", "content": reply})
 
 # 🔁 Reset button
 if st.button("🔁 Reset Conversation"):
