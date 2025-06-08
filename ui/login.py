@@ -19,16 +19,16 @@ def save_users(users):
 def login_screen():
     st.markdown("## 🔐 Login / Sign Up")
 
-    with st.form("auth_form", clear_on_submit=True):
+    with st.form("auth_form", clear_on_submit=False):
         mode = st.radio("Choose an option:", ["Login", "Sign Up"], horizontal=True)
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
-        # submit = st.form_submit_button("🔓 Submit")
+        submit = st.form_submit_button("🔓 Submit")
 
-        if st.form_submit_button("🔓 Submit"):
-            if not username or not password:
-                st.warning("Please enter both username and password.")
-                return None
+    if submit:
+        if not username or not password:
+            st.warning("Please enter both username and password.")
+            return None
 
         users = load_users()
 
