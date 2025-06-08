@@ -13,7 +13,7 @@ from core.retriever import retrieve_relevant_chunks
 from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
 from core.user_paths import get_memory_index_path
-from ui.login import login_signup_ui
+from ui.login import login_screen, get_logged_in_user
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -24,16 +24,11 @@ st.sidebar.title("📁 MemoBrain Navigation")
 st.title("🧠 MemoBrain")
 
 # User authentication
-from ui.login import login_signup_ui
-
-if "is_authenticated" not in st.session_state:
-    st.session_state.is_authenticated = False
-
-if not st.session_state.is_authenticated:
-    user_id = login_signup_ui()
+user_id = get_logged_in_user()
+if not user_id:
+    login_screen()
     st.stop()
-else:
-    user_id = st.session_state.user_id
+
 
 st.sidebar.success(f"👤 Logged in as: {user_id}")
 

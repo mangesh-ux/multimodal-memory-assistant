@@ -1,64 +1,57 @@
 import streamlit as st
-import bcrypt
+import os
 import json
 from pathlib import Path
 
-CREDENTIALS_PATH = Path("data/credentials.json")
+USER_DB = Path("data/users.json")
+USER_DB.parent.mkdir(exist_ok=True)
+if not USER_DB.exists():
+    USER_DB.write_text("{}", encoding="utf-8")
 
-def load_credentials():
-    if CREDENTIALS_PATH.exists():
-        with open(CREDENTIALS_PATH, "r") as f:
-            return json.load(f)
-    else:
-        return {"users": {}}
+def load_users():
+    with open(USER_DB, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-def save_credentials(data):
-    with open(CREDENTIALS_PATH, "w") as f:
-        json.dump(data, f, indent=2)
+def save_users(users):
+    with open(USER_DB, "w", encoding="utf-8") as f:
+        json.dump(users, f, indent=2)
 
-def hash_password(password):
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-
-def check_password(password, hashed):
-    return bcrypt.checkpw(password.encode(), hashed.encode())
-
-def login_signup_ui():
-    if st.session_state.get("is_authenticated"):
-        return st.session_state.get("user_id")
-
-    st.title("🔐 Login / Sign Up")
+def login_screen():
+    st.markdown("## 🔐 Login / Sign Up")
 
     with st.form("auth_form", clear_on_submit=True):
-        action = st.radio("Choose an option:", ["Login", "Sign Up"], key="auth_action")
-        username = st.text_input("Username", key="auth_username")
-        password = st.text_input("Password", type="password", key="auth_password")
-        submitted = st.form_submit_button("🔓 Submit")
+        mode = st.radio("Choose an option:", ["Login", "Sign Up"], horizontal=True)
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submit = st.form_submit_button("🔓 Submit")
 
-    if submitted:
-        creds = load_credentials()
+    if submit:
+        if not username or not password:
+            st.warning("Please enter both username and password.")
+            return None
 
-        if username and password:
-            if action == "Login":
-                if username in creds["users"]:
-                    stored_hash = creds["users"][username]["password"]
-                    if check_password(password, stored_hash):
-                        st.session_state.user_id = username
-                        st.session_state.is_authenticated = True
-                        st.success(f"Welcome back, {username}!")
-                        st.rerun()
-                    else:
-                        st.error("Incorrect password.")
-                else:
-                    st.warning("Username not found.")
-            elif action == "Sign Up":
-                if username in creds["users"]:
-                    st.warning("Username already exists.")
-                else:
-                    creds["users"][username] = {
-                        "email": "",
-                        "password": hash_password(password)
-                    }
-                    save_credentials(creds)
-                    st.success("User registered! Please log in.")
+        users = load_users()
 
-    return None
+        if mode == "Login":
+            if username not in users:
+                st.error("User does not exist. Please sign up first.")
+                return None
+            if users[username] != password:
+                st.error("Incorrect password.")
+                return None
+            st.success(f"Welcome back, {username}!")
+            st.session_state.user_id = username
+            return username
+
+        else:  # Sign Up
+            if username in users:
+                st.error("Username already exists. Try logging in instead.")
+                return None
+            users[username] = password
+            save_users(users)
+            st.success(f"Account created! Welcome, {username}!")
+            st.session_state.user_id = username
+            return username
+
+def get_logged_in_user():
+    return st.session_state.get("user_id")
