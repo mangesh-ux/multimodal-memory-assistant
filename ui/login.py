@@ -39,7 +39,6 @@ def login_screen():
             if users[username] != password:
                 st.error("Incorrect password.")
                 return None
-            st.success(f"Welcome back, {username}!")
             st.session_state.user_id = username
             return username
 
