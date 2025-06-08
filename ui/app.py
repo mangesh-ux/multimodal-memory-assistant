@@ -20,7 +20,6 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Setup
 st.set_page_config(page_title="MemoBrain", layout="wide")
-st.sidebar.title("📁 MemoBrain Navigation")
 st.title("🧠 MemoBrain")
 
 # User authentication
@@ -29,7 +28,7 @@ if not user_id:
     login_screen()
     st.stop()
 
-
+st.sidebar.title("📁 MemoBrain Navigation")
 st.sidebar.success(f"👤 Logged in as: {user_id}")
 
 page = st.sidebar.selectbox("Navigate", ["📁 My Files", "🧠 Memory Manager", "💬 Ask MemoBrain"])
