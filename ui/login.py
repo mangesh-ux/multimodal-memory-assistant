@@ -46,12 +46,12 @@ def login_screen():
         st.error(st.session_state.auth_error)
 
     if "auth_mode" not in st.session_state:
-        st.session_state.auth_mode = "Login"
+        st.session_state.auth_mode = "Login to your MemoBrain account"
 
     st.radio(
         "Choose an option:",
         ["Login to your MemoBrain account", "Create a MemoBrain account"],
-        index=0 if st.session_state.auth_mode == "Login" else 1,
+        index=0 if st.session_state.auth_mode == "Login to your MemoBrain account" else 1,
         horizontal=True,
         key="auth_mode"
     )
