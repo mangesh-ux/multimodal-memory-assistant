@@ -2,6 +2,7 @@ import streamlit as st
 import base64
 from datetime import datetime
 from ui.styles import CARD_BG, TEXT_COLOR, TAG_COLOR, PADDING, RADIUS, BORDER
+from core.user_paths import get_memory_index_path
 
 def render_file_card(entry, user_id):
     with st.container(border=False):
@@ -30,7 +31,6 @@ def render_file_card(entry, user_id):
 
         # Delete button
         if st.button("🗑 Delete", key=f"delete_{entry['source_hash']}"):
-            from core.user_paths import get_memory_index_path
             import json, os
 
             memory_path = get_memory_index_path(user_id)
@@ -40,6 +40,6 @@ def render_file_card(entry, user_id):
                 memory = [m for m in memory if m["source_hash"] != entry["source_hash"]]
                 with open(memory_path, "w") as f:
                     json.dump(memory, f, indent=2)
-                st.experimental_rerun()
+                st.rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
