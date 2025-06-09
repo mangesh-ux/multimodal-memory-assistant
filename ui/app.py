@@ -17,6 +17,7 @@ from core.user_paths import get_memory_index_path
 from ui.login import login_screen, get_logged_in_user
 import base64
 from core.preprocess import extract_text
+from core.metadata_suggester import generate_metadata
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -56,83 +57,31 @@ elif page == "🧠 Memory Manager":
 
         for uploaded_file in uploaded_files:
             st.markdown("### 📄 File Metadata")
+            file_bytes = uploaded_file.read()
+            file_hash = hashlib.md5(file_bytes).hexdigest()
+            ext = Path(uploaded_file.name).suffix.lower().strip(".")
+            filename = f"{file_hash}_{uploaded_file.name}"
+
+            # Save to temp file to extract text
+            temp_path = Path("temp") / filename
+            temp_path.parent.mkdir(exist_ok=True)
+            with open(temp_path, "wb") as f:
+                f.write(file_bytes)
+
+            try:
+                extracted_text = extract_text(temp_path, ext)
+            except Exception as e:
+                extracted_text = f"[Error extracting text: {e}]"
+
+            # Suggest metadata
+            suggested = generate_metadata(extracted_text[:3000], uploaded_file.name)
+            
             with st.expander(f"📝 {uploaded_file.name}"):
-                file_key = uploaded_file.name
-                suggest_key = f"suggested_{file_key}"
-                ext = Path(file_key).suffix.lower().strip(".")
-
-                # Read file content for reuse
-                if f"file_bytes_{file_key}" not in st.session_state:
-                    file_bytes = uploaded_file.read()
-                    st.session_state[f"file_bytes_{file_key}"] = file_bytes
-                else:
-                    file_bytes = st.session_state[f"file_bytes_{file_key}"]
-
-                # Prepare unique keys for each field per file
-                title_key = f"title_{file_key}"
-                tags_key = f"tags_{file_key}"
-                category_key = f"category_{file_key}"
-                notes_key = f"notes_{file_key}"
-
-                # Initialize default values if not already set
-                for k in [title_key, tags_key, category_key, notes_key]:
-                    if k not in st.session_state:
-                        st.session_state[k] = ""
-
-                # Render input widgets using the session state keys
-                title = st.text_input("Title", key=title_key)
-                tags_input = st.text_input("Tags (comma-separated)", key=tags_key)
-                category = st.selectbox("Category", ["", "research", "personal", "meeting", "notes"], key=category_key)
-                notes = st.text_area("Notes", key=notes_key)
-
-
-                # Suggest Metadata Button
-                if st.button("✨ Suggest Metadata", key=f"suggest_{file_key}"):
-                    from core.preprocess import extract_text
-                    temp_path = Path(f"/tmp/{file_key}")
-                    with open(temp_path, "wb") as f:
-                        f.write(file_bytes)
-
-                    try:
-                        file_text = extract_text(temp_path, ext)
-                    except Exception as e:
-                        st.error(f"Failed to extract text: {e}")
-                        file_text = ""
-                
-                    # GPT prompt
-                    prompt = (
-                        f"This is the content of a file named '{file_key}'.\n"
-                        "Suggest the following metadata:\n"
-                        "1. Title (short and clear)\n"
-                        "2. Tags (comma-separated)\n"
-                        "3. Category (one of: research, personal, meeting, notes)\n"
-                        "4. Notes (1-2 sentence summary)\n\n"
-                        f"Content:\n{file_text[:3000]}"
-                    )
-                    try:
-                        response = openai.chat.completions.create(
-                            model="gpt-4",
-                            messages=[
-                                {"role": "system", "content": "You're a helpful assistant that summarizes and tags documents."},
-                                {"role": "user", "content": prompt}
-                            ]
-                        )
-                        output = response.choices[0].message.content
-                        # Extract and fill fields
-                        def extract_value(label):
-                            try:
-                                return output.split(f"{label}")[1].split("\n")[0].strip(": ").strip()
-                            except IndexError:
-                                return ""
-
-                        st.session_state[f"title_{file_key}"] = extract_value("1. Title")
-                        st.session_state[f"tags_{file_key}"] = extract_value("2. Tags")
-                        st.session_state[f"category_{file_key}"] = extract_value("3. Category")
-                        st.session_state[f"notes_{file_key}"] = extract_value("4. Notes")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Metadata suggestion failed: {e}")
-
+                title = st.text_input("Title", value=suggested.get("title", ""), key=f"title_{filename}")
+                tags_input = st.text_input("Tags (comma-separated)", value=", ".join(suggested.get("tags", [])), key=f"tags_{filename}")
+                tags = [t.strip() for t in tags_input.split(",") if t.strip()]
+                category = st.selectbox("Category", ["", "research", "personal", "meeting", "notes"], index=0, key=f"category_{filename})
+                notes = st.text_area("Notes", value=suggested.get("notes", ""), key=f"notes_{filename}")
 
                 if st.button(f"Save {uploaded_file.name}", key=f"save_{uploaded_file.name}"):
                     entry, summary = save_uploaded_file(
@@ -142,7 +91,7 @@ elif page == "🧠 Memory Manager":
                     if summary:
                         st.markdown("#### 🧠 Auto Summary")
                         st.markdown(f"""
-                            <div style="background-color:#f0f2f6;padding:1rem;border-radius:8px;border:1px solid #ccc;">
+                            <div style="background-color:#8db0f7;padding:1rem;border-radius:8px;border:1px solid #ccc;">
                                 {summary}
                             </div>
                         """, unsafe_allow_html=True)
