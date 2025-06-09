@@ -9,50 +9,40 @@ def render_sidebar(user_id):
         st.success(f"🔐 Logged in as: `{user_id}`")
 
         st.markdown("---")
-        st.markdown("### 🧭 Navigate")
+        st.markdown("### 🧭 📂 Main Menu")
 
-        nav_styles = """
-            <style>
-            .sidebar-nav .nav-button {
-                display: block;
-                width: 100%;
-                padding: 0.75rem 1rem;
-                margin-bottom: 0.5rem;
-                border: none;
-                border-radius: 0.5rem;
-                background-color: #1c1c1c;
-                color: #fff;
-                font-size: 1rem;
-                text-align: left;
-                cursor: pointer;
-                transition: background 0.3s;
-            }
-
-            .sidebar-nav .nav-button:hover {
-                background-color: #333;
-            }
-
-            .sidebar-nav .nav-selected {
-                background-color: #f63366;
-                color: #fff;
-                font-weight: bold;
-            }
-            </style>
-        """
-        st.markdown(nav_styles, unsafe_allow_html=True)
+        if "current_page" not in st.session_state:
+            st.session_state.current_page = "📦 Memory Manager"
 
         def nav_button(label, icon):
-            nav_key = f"{icon} {label}"
-            if st.session_state.get("current_page", "📦 Memory Manager") == nav_key:
-                button_html = f'<button class="nav-button nav-selected">{icon} {label}</button>'
-            else:
-                button_html = f'<button class="nav-button" onclick="window.location.reload();">{icon} {label}</button>'
-            st.markdown(button_html, unsafe_allow_html=True)
-            if st.button(f"{icon} {label}", key=f"{label}_btn"):
-                st.session_state.current_page = nav_key
+            page_key = f"{icon} {label}"
+            is_selected = st.session_state.current_page == page_key
+            style = f"""
+                <style>
+                    .nav-button {{
+                        display: block;
+                        width: 100%;
+                        background-color: {'#F63366' if is_selected else '#262730'};
+                        color: {'white' if is_selected else '#ffffffaa'};
+                        font-weight: {'700' if is_selected else '500'};
+                        padding: 0.6rem 1rem;
+                        margin: 0.3rem 0;
+                        border: none;
+                        border-radius: 0.5rem;
+                        text-align: left;
+                        cursor: pointer;
+                    }}
+                    .nav-button:hover {{
+                        background-color: #444;
+                    }}
+                </style>
+                <button class="nav-button" onclick="window.location.reload();">{icon} {label}</button>
+            """
+            st.markdown(style, unsafe_allow_html=True)
+            if st.button(f"{icon} {label}", key=f"btn_{label}"):
+                st.session_state.current_page = page_key
 
-        st.markdown('<div class="sidebar-nav">', unsafe_allow_html=True)
         nav_button("Memory Manager", "📦")
         nav_button("My Files", "📂")
         nav_button("Ask MemoBrain", "💬")
-        st.markdown('</div>', unsafe_allow_html=True)
+
