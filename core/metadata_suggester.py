@@ -44,14 +44,11 @@ def generate_metadata(text: str, filename: str) -> dict:
                 Ensure all keys are present.
 
                 Example Schema:
-                ```json
                 {
-                    "title": "Your title here",,
-                    "title": "string (Concise title of the document)",
+                    "title": "Your title here",
                     "tags": ["tag1", "tag2"],
                     "notes": "Your notes here"
                 }
-                ```
                 Ensure your output is *only* the JSON object, with no conversational text or markdown wrappers.
                 """},
                 {"role": "user", "content": prompt}
@@ -62,10 +59,6 @@ def generate_metadata(text: str, filename: str) -> dict:
         
         # --- Safely parse the JSON output ---
         metadata = json.loads(raw_content)
-        
-        # Optional: Add validation against the schema if you need strict adherence beyond LLM's capability
-        # For production, consider using a library like Pydantic or jsonschema
-        # to validate the 'metadata' dictionary against a defined schema.
 
         return metadata
 
