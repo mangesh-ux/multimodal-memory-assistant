@@ -9,3 +9,4 @@ pytesseract
 pdf2image 
 pillow
 streamlit-login-auth-ui
+streamlit-option-menu

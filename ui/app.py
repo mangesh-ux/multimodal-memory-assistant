@@ -18,6 +18,7 @@ from ui.login import login_screen, get_logged_in_user
 import base64
 from core.preprocess import extract_text
 from core.metadata_suggester import generate_metadata
+from streamlit_option_menu import option_menu
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -37,17 +38,36 @@ if not user_id:
     login_screen()
     st.stop()
 
-st.sidebar.title("📁 MemoBrain Navigation")
-st.sidebar.success(f"👤 Logged in as: {user_id}")
+with st.sidebar:
+    st.markdown("## 📁 MemoBrain Navigation")
+    st.success(f"👤 Logged in as: `{user_id}`", icon="🔐")
 
-page = st.sidebar.selectbox("Navigate", ["📁 My Files", "🧠 Memory Manager", "💬 Ask MemoBrain"])
+    page = option_menu(
+        menu_title="Navigate",
+        options=["Memory Manager", "My Files", "Ask MemoBrain"],
+        icons=["brain", "folder2", "chat-dots"],
+        menu_icon="menu-button-wide",
+        default_index=0,
+        orientation="vertical",
+        styles={
+            "container": {"padding": "0!important"},
+            "icon": {"color": "#ffffff", "font-size": "18px"},
+            "nav-link": {
+                "font-size": "16px",
+                "text-align": "left",
+                "margin": "5px",
+                "--hover-color": "#3c4046",
+            },
+            "nav-link-selected": {"background-color": "#2d3142"},
+        }
+    )
 # My Files
-if page == "📁 My Files":
-    # st.title("🗂️ Your Files")
+if page == "My Files":
+    st.title("🗂️ Your Files")
     render_my_files_tab(user_id)
 
 # Memory Tab
-elif page == "🧠 Memory Manager":
+elif page == "Memory Manager":
     st.title("🧠 Memory Manager")
     st.markdown("Upload documents or write memory notes. Everything becomes searchable.")
 
@@ -143,7 +163,7 @@ elif page == "🧠 Memory Manager":
         st.success("✅ Note saved to memory.")
 
 # Ask Tab
-elif page == "💬 Ask MemoBrain":
+elif page == "Ask MemoBrain":
     st.title("💬 Ask MemoBrain")
     st.markdown("Ask any question. MemoBrain will answer based on your uploaded memory.")
 
