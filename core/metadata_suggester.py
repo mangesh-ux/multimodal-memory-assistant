@@ -30,7 +30,7 @@ def generate_metadata(text: str, filename: str) -> dict:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4",
             # --- IMPORTANT: Use response_format for JSON output ---
             response_format={"type": "json_object"},
             messages=[
@@ -46,14 +46,10 @@ def generate_metadata(text: str, filename: str) -> dict:
                 Example Schema:
                 ```json
                 {
-                    "document_type": "string (e.g., Police Report, Repair Estimate, Witness Statement, Policy Document, Medical Record, Invoice)",
+                    "title": "Your title here",,
                     "title": "string (Concise title of the document)",
-                    "date_of_document": "YYYY-MM-DD or null",
-                    "parties_involved": "array of strings (Names of individuals or entities mentioned, e.g., Insured, Adverse Party, Witness)",
-                    "key_entities": "array of strings (Important objects, locations, or concepts, e.g., Vehicle VIN, Property Address, Product Name)",
-                    "summary_brief": "string (A very short, 1-2 sentence summary of the document's main point)",
-                    "relevant_sections": "array of strings (Key section titles or topics, e.g., 'Incident Description', 'Damages', 'Policy Details')",
-                    "extracted_keywords": "array of strings (5-10 keywords that describe the document's content)"
+                    "tags": ["tag1", "tag2"],
+                    "notes": "Your notes here"
                 }
                 ```
                 Ensure your output is *only* the JSON object, with no conversational text or markdown wrappers.

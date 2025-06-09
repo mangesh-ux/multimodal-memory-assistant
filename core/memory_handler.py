@@ -44,7 +44,7 @@ def auto_summarize(text: str, filename: str) -> str:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a concise and analytical summarization agent."},
                 {"role": "user", "content": prompt}
