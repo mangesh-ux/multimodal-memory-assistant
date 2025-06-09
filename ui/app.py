@@ -19,6 +19,7 @@ import base64
 from core.preprocess import extract_text
 from core.metadata_suggester import generate_metadata
 from streamlit_option_menu import option_menu
+from ui.sidebar import render_sidebar
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -38,36 +39,17 @@ if not user_id:
     login_screen()
     st.stop()
 
-with st.sidebar:
-    st.markdown("## 📁 MemoBrain Navigation")
-    st.success(f"👤 Logged in as: `{user_id}`", icon="🔐")
+# Sidebar
+render_sidebar(user_id)
+page = st.session_state.get("current_page", "📦 Memory Manager")
 
-    page = option_menu(
-        menu_title="Navigate",
-        options=["Memory Manager", "My Files", "Ask MemoBrain"],
-        icons=["brain", "folder2", "chat-dots"],
-        menu_icon="menu-button-wide",
-        default_index=0,
-        orientation="vertical",
-        styles={
-            "container": {"padding": "0!important"},
-            "icon": {"color": "#ffffff", "font-size": "18px"},
-            "nav-link": {
-                "font-size": "16px",
-                "text-align": "left",
-                "margin": "5px",
-                "--hover-color": "#3c4046",
-            },
-            "nav-link-selected": {"background-color": "#2d3142"},
-        }
-    )
 # My Files
-if page == "My Files":
+if page == "📂 My Files":
     st.title("🗂️ Your Files")
     render_my_files_tab(user_id)
 
 # Memory Tab
-elif page == "Memory Manager":
+elif page == "📦 Memory Manager":
     st.title("🧠 Memory Manager")
     st.markdown("Upload documents or write memory notes. Everything becomes searchable.")
 
@@ -120,7 +102,7 @@ elif page == "Memory Manager":
                     if summary:
                         st.markdown("#### 🧠 Auto Summary")
                         st.markdown(f"""
-                            <div style="background-color:#8db0f7;padding:1rem;border-radius:8px;border:1px solid #ccc;">
+                            <div style="background-color:#0993e8;padding:1rem;border-radius:8px;border:1px solid #ccc;">
                                 {summary}
                             </div>
                         """, unsafe_allow_html=True)
@@ -163,7 +145,7 @@ elif page == "Memory Manager":
         st.success("✅ Note saved to memory.")
 
 # Ask Tab
-elif page == "Ask MemoBrain":
+elif page == "💬 Ask MemoBrain":
     st.title("💬 Ask MemoBrain")
     st.markdown("Ask any question. MemoBrain will answer based on your uploaded memory.")
 
