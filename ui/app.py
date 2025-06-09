@@ -75,12 +75,12 @@ elif page == "🧠 Memory Manager":
 
             # Suggest metadata
             suggested = generate_metadata(extracted_text[:3000], uploaded_file.name)
-            
+
             with st.expander(f"📝 {uploaded_file.name}"):
                 title = st.text_input("Title", value=suggested.get("title", ""), key=f"title_{filename}")
                 tags_input = st.text_input("Tags (comma-separated)", value=", ".join(suggested.get("tags", [])), key=f"tags_{filename}")
                 tags = [t.strip() for t in tags_input.split(",") if t.strip()]
-                category = st.selectbox("Category", ["", "research", "personal", "meeting", "notes"], index=0, key=f"category_{filename})
+                category = st.selectbox("Category", ["", "research", "personal", "meeting", "notes"], index=0, key=f"category_{filename}")
                 notes = st.text_area("Notes", value=suggested.get("notes", ""), key=f"notes_{filename}")
 
                 if st.button(f"Save {uploaded_file.name}", key=f"save_{uploaded_file.name}"):
