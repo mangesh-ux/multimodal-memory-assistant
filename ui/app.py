@@ -45,7 +45,7 @@ page = st.session_state.get("current_page", "📦 Memory Manager")
 
 # My Files
 if page == "📂 My Files":
-    st.title("🗂️ Your Files")
+    # st.title("🗂️ Your Files")
     render_my_files_tab(user_id)
 
 # Memory Tab

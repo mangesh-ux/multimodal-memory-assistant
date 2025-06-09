@@ -9,7 +9,7 @@ def render_sidebar(user_id):
         st.success(f"🔐 Logged in as: `{user_id}`")
 
         st.markdown("---")
-        st.markdown("### 🧭 📂 Main Menu")
+        st.markdown("### 🧾 Main Menu")
 
         if "current_page" not in st.session_state:
             st.session_state.current_page = "📦 Memory Manager"
