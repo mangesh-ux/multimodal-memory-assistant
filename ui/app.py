@@ -68,12 +68,23 @@ elif page == "🧠 Memory Manager":
                 else:
                     file_bytes = st.session_state[f"file_bytes_{file_key}"]
 
-                # Input fields
-                title = st.text_input(f"Title for {file_key}", key=f"title_{file_key}")
-                tags_input = st.text_input(f"Tags (comma-separated)", key=f"tags_{file_key}")
-                tags = [t.strip() for t in tags_input.split(",") if t.strip()]
-                category = st.selectbox("Category", ["", "research", "personal", "meeting", "notes"], key=f"category_{file_key}")
-                notes = st.text_area("Notes", key=f"notes_{file_key}")
+                # Prepare unique keys for each field per file
+                title_key = f"title_{file_key}"
+                tags_key = f"tags_{file_key}"
+                category_key = f"category_{file_key}"
+                notes_key = f"notes_{file_key}"
+
+                # Initialize default values if not already set
+                for k in [title_key, tags_key, category_key, notes_key]:
+                    if k not in st.session_state:
+                        st.session_state[k] = ""
+
+                # Render input widgets using the session state keys
+                title = st.text_input("Title", key=title_key)
+                tags_input = st.text_input("Tags (comma-separated)", key=tags_key)
+                category = st.selectbox("Category", ["", "research", "personal", "meeting", "notes"], key=category_key)
+                notes = st.text_area("Notes", key=notes_key)
+
 
                 # Suggest Metadata Button
                 if st.button("✨ Suggest Metadata", key=f"suggest_{file_key}"):

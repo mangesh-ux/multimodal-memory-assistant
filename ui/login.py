@@ -23,7 +23,7 @@ def attempt_auth(mode, username, password):
 
     users = load_users()
 
-    if mode == "Login":
+    if mode == "Login to your MemoBrain account":
         if username not in users:
             st.session_state.auth_error = "User does not exist. Please sign up first."
             return
@@ -50,7 +50,7 @@ def login_screen():
 
     st.radio(
         "Choose an option:",
-        ["Login", "Sign Up"],
+        ["Login to your MemoBrain account", "Create a MemoBrain account"],
         index=0 if st.session_state.auth_mode == "Login" else 1,
         horizontal=True,
         key="auth_mode"
