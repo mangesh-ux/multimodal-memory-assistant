@@ -25,6 +25,11 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # Setup
 st.set_page_config(page_title="MemoBrain", layout="wide")
 st.title("MemoBrain File Manager")
+DEFAULT_CATEGORIES = [
+                    "personal", "work", "finance", "health", "education",
+                    "legal", "creative", "research", "travel", "communication",
+                    "project", "other"
+                ]
 
 # User authentication
 user_id = get_logged_in_user()
@@ -80,7 +85,11 @@ elif page == "🧠 Memory Manager":
                 title = st.text_input("Title", value=suggested.get("title", ""), key=f"title_{filename}")
                 tags_input = st.text_input("Tags (comma-separated)", value=", ".join(suggested.get("tags", [])), key=f"tags_{filename}")
                 tags = [t.strip() for t in tags_input.split(",") if t.strip()]
-                category = st.selectbox("Category", ["", "research", "personal", "meeting", "notes"], index=0, key=f"category_{filename}")
+                category = st.selectbox(
+                    f"Choose a category for {uploaded_file.name}",
+                    DEFAULT_CATEGORIES + ["[Other]"],
+                    key=f"category_{uploaded_file.name}"
+                )
                 notes = st.text_area("Notes", value=suggested.get("notes", ""), key=f"notes_{filename}")
 
                 if st.button(f"Save {uploaded_file.name}", key=f"save_{uploaded_file.name}"):
@@ -104,7 +113,7 @@ elif page == "🧠 Memory Manager":
     note_text = st.text_area("Memory Content")
     note_title = st.text_input("Optional title")
     note_tags = st.text_input("Tags (comma-separated)")
-    note_category = st.selectbox("Category", ["", "idea", "meeting", "personal", "thought"])
+    note_category = st.selectbox("Category", DEFAULT_CATEGORIES)
     note_notes = st.text_input("Additional notes")
 
     if st.button("Save Note"):
