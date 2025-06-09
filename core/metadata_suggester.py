@@ -31,8 +31,6 @@ def generate_metadata(text: str, filename: str) -> dict:
     try:
         response = client.chat.completions.create(
             model="gpt-4",
-            # --- IMPORTANT: Use response_format for JSON output ---
-            response_format={"type": "json_object"},
             messages=[
                 {"role": "system", "content": """
                 You are an expert document analyst specializing in extracting structured metadata.
