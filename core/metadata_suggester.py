@@ -55,8 +55,7 @@ def generate_metadata(text: str, filename: str) -> dict:
                 Ensure your output is *only* the JSON object, with no conversational text or markdown wrappers.
                 """},
                 {"role": "user", "content": prompt}
-            ],
-            temperature=0.4 # Lower temperature for more consistent, factual output
+            ]
         )
 
         raw_content = response.choices[0].message.content.strip()
