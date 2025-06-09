@@ -81,7 +81,7 @@ elif page == "📦 Memory Manager":
                 extracted_text = f"[Error extracting text: {e}]"
 
             # Suggest metadata
-            suggested = generate_metadata(extracted_text[:3000], uploaded_file.name)
+            suggested = generate_metadata(extracted_text[:1000], uploaded_file.name)
 
             with st.expander(f"📝 {uploaded_file.name}"):
                 title = st.text_input("Title", value=suggested.get("title", ""), key=f"title_{filename}")
@@ -96,7 +96,7 @@ elif page == "📦 Memory Manager":
 
                 if st.button(f"Save {uploaded_file.name}", key=f"save_{uploaded_file.name}"):
                     entry, summary = save_uploaded_file(
-                        uploaded_file, title, tags, category, notes, user_id
+                        uploaded_file, title, tags, category, notes, user_id, extracted_text
                     )
                     st.success(f"{uploaded_file.name} saved to memory ✅")
                     if summary:

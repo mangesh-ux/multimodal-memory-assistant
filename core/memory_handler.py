@@ -44,7 +44,7 @@ def auto_summarize(text: str, filename: str) -> str:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a concise and analytical summarization agent."},
                 {"role": "user", "content": prompt}
@@ -54,7 +54,7 @@ def auto_summarize(text: str, filename: str) -> str:
     except Exception as e:
         return f"[Summarization failed: {e}]"
 
-def save_uploaded_file(uploaded_file, title, tags, category, notes, user_id):
+def save_uploaded_file(uploaded_file, title, tags, category, notes, user_id, extracted_text):
     file_bytes = uploaded_file.read()
     file_hash = get_file_hash(file_bytes)
 
@@ -65,13 +65,8 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes, user_id):
     with open(file_path, "wb") as f:
         f.write(file_bytes)
 
-    # Extract text
-    try:
-        text = extract_text(file_path, ext)
-    except Exception as e:
-        text = f"[Error extracting text: {e}]"
 
-    raw_chunks = chunk_text(text)
+    raw_chunks = chunk_text(extracted_text)
     chunks = [{
         "text": c,
         "title": title or "",
@@ -85,7 +80,7 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes, user_id):
     chunk_vectors = embed_and_store(chunks, user_id)
 
      # 🔍 Run summarizer agent if applicable
-    summary = auto_summarize(text, uploaded_file.name)
+    summary = auto_summarize(extracted_text, uploaded_file.name)
     if summary:
         summary_chunks = [{
             "text": summary,
@@ -115,7 +110,7 @@ def save_uploaded_file(uploaded_file, title, tags, category, notes, user_id):
         "filename": uploaded_file.name,
         "filetype": ext,
         "filepath": str(file_path),
-        "text_preview": text[:500],
+        "text_preview": extracted_text[:500],
         "date_uploaded": datetime.now().isoformat(),
         "embedding_chunks": [
                             {"text": chunk, "vector": sanitize_vector(vec)}
