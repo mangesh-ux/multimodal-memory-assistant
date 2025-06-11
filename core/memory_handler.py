@@ -15,6 +15,7 @@ from core.user_paths import (
 )
 from dotenv import load_dotenv
 from openai import OpenAI
+import numpy as np
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
