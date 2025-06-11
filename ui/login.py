@@ -41,9 +41,9 @@ def attempt_auth(mode, username, password):
         st.session_state.user_id = username
         
         # Create user directory
-        from core.user_paths import get_user_dir
-        user_dir = get_user_dir(username)
-        Path(user_dir).mkdir(parents=True, exist_ok=True)
+        from core.user_paths import get_user_data_dir
+        user_dir = get_user_data_dir(username)
+        # Path(user_dir).mkdir(parents=True, exist_ok=True)  # This line is unnecessary as get_user_data_dir already creates the directory
 
 def enter_demo_mode():
     """Enter a demo mode with a temporary user account"""
@@ -62,9 +62,9 @@ def enter_demo_mode():
     st.session_state.demo_expiry = time.time() + (60 * 60)  # 1 hour demo
     
     # Create demo user directory
-    from core.user_paths import get_user_dir
-    user_dir = get_user_dir(demo_username)
-    Path(user_dir).mkdir(parents=True, exist_ok=True)
+    from core.user_paths import get_user_data_dir
+    user_dir = get_user_data_dir(demo_username)
+    # Path(user_dir).mkdir(parents=True, exist_ok=True)  # This line is unnecessary as get_user_data_dir already creates the directory
 
 def check_demo_expiry():
     """Check if the demo mode has expired"""
@@ -102,7 +102,7 @@ def show_demo_banner():
 def cleanup_expired_demos():
     """Clean up expired demo accounts"""
     import shutil
-    from core.user_paths import get_user_dir
+    from core.user_paths import get_user_data_dir
     from core.delete_memory import delete_user_memory
     
     # Find demo users
@@ -113,7 +113,7 @@ def cleanup_expired_demos():
     for demo_user in demo_users:
         # For a real implementation, you would store expiry times in a database
         # Here we'll just remove demo accounts older than 24 hours based on file timestamps
-        user_dir = Path(get_user_dir(demo_user))
+        user_dir = Path(get_user_data_dir(demo_user))
         if user_dir.exists():
             # Check creation time of directory
             import os
