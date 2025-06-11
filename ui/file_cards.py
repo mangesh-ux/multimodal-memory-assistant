@@ -94,20 +94,35 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
         col1, col2, col3 = st.columns(3)
         
         # Generate a unique identifier for this entry
-        entry_id = id(entry)
+        # Use a more stable identifier based on hash and filename
+        entry_id = hash(f"{entry.get('source_hash', '')}-{entry.get('filename', '')}")
         
         # Preview button
         with col1:
+            # Determine preview type based on file extension if not explicitly set
+            filetype = entry.get('filetype', '').lower()
+            if 'preview_type' not in entry:
+                if filetype in ['txt', 'pdf']:
+                    entry['preview_type'] = 'text'
+                elif filetype in ['png', 'jpg', 'jpeg']:
+                    entry['preview_type'] = 'image'
+                else:
+                    entry['preview_type'] = 'none'
+                    
             preview_type = entry.get('preview_type', 'none')
-            if preview_type != 'none':
+            
+            # Only show preview button if we have something to preview
+            if preview_type != 'none' and (preview_type == 'text' and entry.get('text_preview') or 
+                                          preview_type == 'image' and entry.get('filepath')):
                 # Create unique key for button
-                unique_key = f"preview_{entry['source_hash']}_{entry_id}"
-                # Create unique session state key
-                session_state_key = f"preview_{entry['source_hash']}_{entry_id}_open"
+                unique_key = f"preview_{entry.get('source_hash', '')}_{entry_id}"
                 
                 if st.button("👁️ Preview", key=unique_key):
-                    st.session_state[session_state_key] = True
-        
+                    # Use a simpler session state key
+                    st.session_state[f"preview_{entry_id}"] = True
+                    # Add logging to debug
+                    print(f"Preview button clicked for {entry.get('title', 'Unknown')}, setting {f'preview_{entry_id}'} to True")
+            
         # File download
         with col2:
             if entry.get('filepath') and os.path.exists(entry['filepath']):
@@ -123,7 +138,7 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
         # Delete button
         with col3:
             # Add a unique identifier to prevent duplicate keys
-            delete_key = f"delete_{entry['source_hash']}_{entry_id}"
+            delete_key = f"delete_{entry_id}"
             if st.button("🗑 Delete", key=delete_key):
                 try:
                     # Load memory index
@@ -133,7 +148,8 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
                             memory = json.load(f)
                             
                         # Filter out the entry to delete
-                        memory = [m for m in memory if m["source_hash"] != entry["source_hash"]]
+                        source_hash = entry.get("source_hash", "")
+                        memory = [m for m in memory if m.get("source_hash", "") != source_hash]
                         
                         # Write with atomic pattern
                         with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
@@ -143,31 +159,40 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
                         shutil.move(tmp_path, memory_path)
                         
                         # Delete the actual file if it exists
-                        if entry.get('filepath') and os.path.exists(entry['filepath']):
-                            os.remove(entry['filepath'])
+                        filepath = entry.get('filepath', '')
+                        if filepath and os.path.exists(filepath):
+                            os.remove(filepath)
                             
                         st.success("File deleted successfully!")
+                        # Add logging to debug
+                        print(f"File deleted: {entry.get('title', 'Unknown')}")
                         st.rerun()
                 except Exception as e:
                     st.error(f"Error deleting file: {str(e)}")
+                    print(f"Delete error: {str(e)}")
         
         # Show preview if requested
-        session_state_key = f"preview_{entry['source_hash']}_{entry_id}_open"
-        if session_state_key in st.session_state and st.session_state[session_state_key]:
+        preview_state_key = f"preview_{entry_id}"
+        if preview_state_key in st.session_state and st.session_state[preview_state_key]:
             st.markdown("### File Preview")
             preview_type = entry.get('preview_type', 'none')
             
-            if preview_type == 'image' and entry.get('filepath') and os.path.exists(entry['filepath']):
-                with open(entry['filepath'], "rb") as f:
-                    image_data = f.read()
-                st.image(image_data, caption=entry.get('title', entry.get('filename', 'Image')))
+            if preview_type == 'image' and entry.get('filepath') and os.path.exists(entry.get('filepath', '')):
+                try:
+                    with open(entry.get('filepath'), "rb") as f:
+                        image_data = f.read()
+                    st.image(image_data, caption=entry.get('title', entry.get('filename', 'Image')))
+                except Exception as e:
+                    st.error(f"Error loading image: {str(e)}")
             elif preview_type == 'text' and entry.get('text_preview'):
                 st.text_area("Content", value=entry.get('text_preview', ''), height=200, disabled=True)
             else:
                 st.info("Preview not available for this file type.")
                 
             # Close preview button with unique key
-            close_key = f"close_preview_{entry['source_hash']}_{entry_id}"
+            close_key = f"close_{entry_id}"
             if st.button("Close Preview", key=close_key):
-                st.session_state[session_state_key] = False
+                st.session_state[preview_state_key] = False
+                # Add logging to debug
+                print(f"Close button clicked for {entry.get('title', 'Unknown')}, setting {preview_state_key} to False")
                 st.rerun()
