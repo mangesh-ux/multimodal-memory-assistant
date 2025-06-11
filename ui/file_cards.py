@@ -141,15 +141,26 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
             delete_key = f"delete_{entry_id}"
             if st.button("🗑 Delete", key=delete_key):
                 try:
+                    # Store the file info to delete in session state
+                    # This ensures we're deleting exactly this file
+                    file_to_delete = {
+                        "source_hash": entry.get("source_hash", ""),
+                        "filename": entry.get("filename", ""),
+                        "filepath": entry.get("filepath", "")
+                    }
+                    
                     # Load memory index
                     memory_path = get_memory_index_path(user_id)
                     if os.path.exists(memory_path):
                         with open(memory_path, "r") as f:
                             memory = json.load(f)
                             
-                        # Filter out the entry to delete
-                        source_hash = entry.get("source_hash", "")
-                        memory = [m for m in memory if m.get("source_hash", "") != source_hash]
+                        # Filter out the entry to delete using multiple identifiers
+                        # This ensures we only delete the exact file we want
+                        memory = [m for m in memory if not (
+                            m.get("source_hash", "") == file_to_delete["source_hash"] and 
+                            m.get("filename", "") == file_to_delete["filename"]
+                        )]
                         
                         # Write with atomic pattern
                         with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp_file:
@@ -159,13 +170,12 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
                         shutil.move(tmp_path, memory_path)
                         
                         # Delete the actual file if it exists
-                        filepath = entry.get('filepath', '')
-                        if filepath and os.path.exists(filepath):
-                            os.remove(filepath)
+                        if file_to_delete["filepath"] and os.path.exists(file_to_delete["filepath"]):
+                            os.remove(file_to_delete["filepath"])
                             
-                        st.success("File deleted successfully!")
-                        # Add logging to debug
-                        print(f"File deleted: {entry.get('title', 'Unknown')}")
+                        st.success(f"File '{file_to_delete['filename']}' deleted successfully!")
+                        # Add logging for debugging
+                        print(f"Deleted file: {file_to_delete['filename']} with hash {file_to_delete['source_hash']}")
                         st.rerun()
                 except Exception as e:
                     st.error(f"Error deleting file: {str(e)}")
