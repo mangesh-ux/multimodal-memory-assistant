@@ -24,8 +24,8 @@ MemoBrain is an AI-native file management system built with Streamlit, OpenAI, a
 
 | Smart File Manager UI | Ask Anything Chat |
 |------------------------|-------------------|
-| ![Alt text](./screenshots/image-fmui.png) | !![Alt text](./screenshots/image-1.png) |
-| ![](./screenshots/image.png) | ![Alt text](./screenshots/imagechat.png)
+| ![Alt text](image-1.png) | ![Alt text](image-2.png) |
+| ![Alt text](image-4.png) | ![Alt text](image-3.png) |
 
 ## 🚀 Setup Instructions
 
