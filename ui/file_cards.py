@@ -97,7 +97,9 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
         with col1:
             preview_type = entry.get('preview_type', 'none')
             if preview_type != 'none':
-                if st.button("👁️ Preview", key=f"preview_{entry['source_hash']}"):
+                # Add a unique identifier (index + timestamp) to prevent duplicate keys
+                unique_key = f"preview_{entry['source_hash']}_{id(entry)}"
+                if st.button("👁️ Preview", key=unique_key):
                     st.session_state[f"preview_{entry['source_hash']}_open"] = True
         
         # File download
@@ -114,7 +116,9 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
 
         # Delete button
         with col3:
-            if st.button("🗑 Delete", key=f"delete_{entry['source_hash']}"):
+            # Add a unique identifier to prevent duplicate keys
+            delete_key = f"delete_{entry['source_hash']}_{id(entry)}"
+            if st.button("🗑 Delete", key=delete_key):
                 try:
                     # Load memory index
                     memory_path = get_memory_index_path(user_id)
@@ -155,6 +159,8 @@ def render_file_card(entry: Dict[str, Any], user_id: str):
             else:
                 st.info("Preview not available for this file type.")
                 
-            if st.button("Close Preview", key=f"close_preview_{entry['source_hash']}"):
+            # Add a unique identifier to prevent duplicate keys
+            close_key = f"close_preview_{entry['source_hash']}_{id(entry)}"
+            if st.button("Close Preview", key=close_key):
                 st.session_state[f"preview_{entry['source_hash']}_open"] = False
                 st.rerun()

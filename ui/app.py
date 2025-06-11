@@ -167,8 +167,21 @@ elif page == "📦 Memory Manager":
                             if summary:
                                 st.markdown("#### 🧠 Auto Summary")
                                 st.markdown(f"""
-                                    <div style="background-color:#f0f2f6;padding:1rem;border-radius:8px;border:1px solid #ccc;">
-                                        {summary}
+                                    <div style="
+                                        background-color: rgba(49, 51, 63, 0.1); 
+                                        border-left: 4px solid #FF4B4B; 
+                                        padding: 1rem 1.5rem; 
+                                        border-radius: 0.5rem; 
+                                        margin: 1rem 0; 
+                                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                                        font-size: 0.95rem;
+                                        line-height: 1.5;
+                                    ">
+                                        <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 1.2rem; margin-right: 0.5rem;">🤖</span>
+                                            <strong>AI-Generated Summary</strong>
+                                        </div>
+                                        <div style="margin-left: 1.7rem;">{summary}</div>
                                     </div>
                                 """, unsafe_allow_html=True)
                             else:
