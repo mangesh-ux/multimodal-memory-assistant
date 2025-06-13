@@ -9,9 +9,19 @@ from dotenv import load_dotenv
 import sys
 import logging
 from typing import List, Dict, Any, Optional
+import plotly.express as px
+import plotly.graph_objects as go
+from collections import Counter
+import uuid
 
 from ui.my_files import render_my_files_tab
-from core.memory_handler import save_uploaded_file
+from core.memory_handler import (
+    save_uploaded_file, 
+    update_memory_access,
+    add_memory_relationship,
+    MemoryType,
+    MemoryImportance
+)
 from core.retriever import retrieve_relevant_chunks
 from core.embedder import embed_and_store
 from core.context_formatter import format_context_with_metadata
@@ -41,29 +51,187 @@ DEFAULT_CATEGORIES = [
 
 # Setup page configuration
 st.set_page_config(
-    page_title="MemoBrain", 
+    page_title="MemoBrain OS", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Apply custom CSS for mobile responsiveness
+# Apply custom CSS for modern OS-like interface
 st.markdown("""
 <style>
+    /* Modern OS-like interface */
+    .main {
+        background-color: #f8f9fa;
+    }
+    
+    /* Dashboard cards */
+    .dashboard-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        transition: transform 0.2s;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    /* Memory importance indicators */
+    .importance-critical { color: #dc3545; }
+    .importance-high { color: #fd7e14; }
+    .importance-medium { color: #ffc107; }
+    .importance-low { color: #20c997; }
+    .importance-minimal { color: #6c757d; }
+    
+    /* Memory type icons */
+    .memory-type {
+        font-size: 1.2rem;
+        margin-right: 8px;
+    }
+    
+    /* Relationship graph */
+    .relationship-graph {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Timeline view */
+    .timeline-item {
+        border-left: 3px solid #007bff;
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
+    
     /* Mobile-friendly adjustments */
     @media (max-width: 768px) {
         .stButton button {width: 100%;}
         .stTextInput input {width: 100%;}
         .stSelectbox select {width: 100%;}
     }
-    
-    /* Improve file card display */
-    .file-card {transition: transform 0.2s;}
-    .file-card:hover {transform: translateY(-2px);}
 </style>
 """, unsafe_allow_html=True)
 
+def render_dashboard(user_id: str):
+    """Render the main dashboard with memory statistics and insights."""
+    st.title("🧠 MemoBrain OS Dashboard")
+    
+    # Load memory data
+    memory_path = get_memory_index_path(user_id)
+    if not memory_path.exists():
+        st.info("No memories found. Start by uploading some files or creating notes!")
+        return
+        
+    with open(memory_path, "r") as f:
+        memories = json.load(f)
+    
+    # Calculate statistics
+    total_memories = len(memories)
+    total_size = sum(m.get("file_size", 0) for m in memories)
+    categories = Counter(m.get("category", "uncategorized") for m in memories)
+    importance_levels = Counter(m.get("importance", 3) for m in memories)
+    
+    # Create dashboard layout
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+            <div class="dashboard-card">
+                <h3>📊 Memory Statistics</h3>
+                <p>Total Memories: {}</p>
+                <p>Total Size: {:.1f} MB</p>
+                <p>Categories: {}</p>
+            </div>
+        """.format(
+            total_memories,
+            total_size / (1024 * 1024),
+            len(categories)
+        ), unsafe_allow_html=True)
+    
+    with col2:
+        # Create importance distribution pie chart
+        fig = px.pie(
+            values=list(importance_levels.values()),
+            names=[f"Level {k}" for k in importance_levels.keys()],
+            title="Memory Importance Distribution"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col3:
+        # Create category distribution bar chart
+        fig = px.bar(
+            x=list(categories.keys()),
+            y=list(categories.values()),
+            title="Memory Categories"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Recent memories timeline
+    st.markdown("### 📅 Recent Memories")
+    recent_memories = sorted(
+        memories,
+        key=lambda x: x.get("temporal_metadata", {}).get("last_accessed", ""),
+        reverse=True
+    )[:5]
+    
+    for memory in recent_memories:
+        with st.expander(f"{memory.get('title', 'Untitled')} ({memory.get('category', 'uncategorized')})"):
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(memory.get("text_preview", "")[:200] + "...")
+            with col2:
+                st.markdown(f"""
+                    <div class="timeline-item">
+                        <p>Last accessed: {memory.get('temporal_metadata', {}).get('last_accessed', 'Never')}</p>
+                        <p>Access count: {memory.get('access_count', 0)}</p>
+                        <p>Importance: {memory.get('importance', 3)}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+    
+    # Memory relationships graph
+    st.markdown("### 🔄 Memory Relationships")
+    if any(m.get("relationships") for m in memories):
+        # Create a simple network graph of relationships
+        nodes = []
+        edges = []
+        for memory in memories:
+            if memory.get("relationships"):
+                nodes.append(memory["id"])
+                for rel in memory["relationships"]:
+                    edges.append((memory["id"], rel["target_id"]))
+        
+        fig = go.Figure(data=[
+            go.Scatter(
+                x=[i for i in range(len(nodes))],
+                y=[0] * len(nodes),
+                mode='markers+text',
+                text=nodes,
+                textposition="top center",
+                marker=dict(size=20)
+            )
+        ])
+        
+        # Add edges
+        for edge in edges:
+            source_idx = nodes.index(edge[0])
+            target_idx = nodes.index(edge[1])
+            fig.add_shape(
+                type="line",
+                x0=source_idx, y0=0,
+                x1=target_idx, y1=0,
+                line=dict(color="gray", width=2)
+            )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No memory relationships found. Create relationships between memories to see them here!")
+
 # Page title
-st.title("MemoBrain File Manager")
+st.title("MemoBrain OS")
 
 # User authentication
 user_id = get_logged_in_user()
@@ -73,10 +241,14 @@ if not user_id:
 
 # Render sidebar navigation
 render_sidebar(user_id)
-page = st.session_state.get("current_page", "📦 Memory Manager")
+page = st.session_state.get("current_page", "📊 Dashboard")
+
+# Dashboard Tab
+if page == "📊 Dashboard":
+    render_dashboard(user_id)
 
 # My Files Tab
-if page == "📂 My Files":
+elif page == "📂 My Files":
     render_my_files_tab(user_id)
 
 # Memory Manager Tab
@@ -217,6 +389,7 @@ elif page == "📦 Memory Manager":
 
                     # Create note entry
                     entry = {
+                        "id": str(uuid.uuid4()),
                         "filename": f"user_note_{datetime.now().isoformat()}.txt",
                         "filetype": "txt",
                         "filepath": "",
@@ -231,7 +404,24 @@ elif page == "📦 Memory Manager":
                         "tags": [t.strip() for t in note_tags.split(",") if t],
                         "category": note_category,
                         "notes": note_notes,
-                        "file_size": len(note_text.encode())
+                        "file_size": len(note_text.encode()),
+                        "importance": 3,  # Default medium importance
+                        "version": 1,
+                        "access_count": 0,
+                        "last_accessed": datetime.now().isoformat(),
+                        "relationships": [],
+                        "context": {
+                            "created_at": datetime.now().isoformat(),
+                            "created_by": user_id,
+                            "source": "manual_note",
+                            "location": ""
+                        },
+                        "temporal_metadata": {
+                            "created_at": datetime.now().isoformat(),
+                            "modified_at": datetime.now().isoformat(),
+                            "last_accessed": datetime.now().isoformat(),
+                            "access_count": 0
+                        }
                     }
 
                     # Save to memory index
@@ -251,8 +441,7 @@ elif page == "📦 Memory Manager":
                         tmp_path = tmp_file.name
                     
                     shutil.move(tmp_path, memory_path)
-                    
-                    st.success("✅ Note saved to memory.")
+                    st.success("Note saved to memory ✅")
                 except Exception as e:
                     st.error(f"Error saving note: {str(e)}")
         elif submit_button:
