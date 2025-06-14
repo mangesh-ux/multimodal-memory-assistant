@@ -112,11 +112,8 @@ def render_sidebar(user_id: str):
     """, unsafe_allow_html=True)
     
     with st.sidebar:
-        # Logo and title with enhanced styling
-        st.markdown('<div class="logo-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">', unsafe_allow_html=True)
-        st.image("./screenshots/logo_image.png", width=56)
-        st.markdown('<div style="font-size:1.5rem; font-weight:700; color:#fff; margin-top:0.5rem;">MemoBrain OS</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Professional logo using st.logo (title not needed)
+        st.logo("./screenshots/logo_image.png", size="large")
         st.markdown('<hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0 1.5rem 0;" />', unsafe_allow_html=True)
         
         # Main navigation with enhanced styling
