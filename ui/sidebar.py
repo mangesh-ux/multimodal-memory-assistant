@@ -4,30 +4,58 @@ import json
 from pathlib import Path
 from datetime import datetime, timedelta
 from core.user_paths import get_memory_index_path
+from streamlit_option_menu import option_menu
 
 def render_sidebar(user_id: str):
     """Render the enhanced sidebar with OS-like navigation and features."""
     
     with st.sidebar:
-        st.image("./screenshots/logo_image.png", width=50)
-        st.title("MemoBrain OS")
+        # Logo and title
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            st.image("./screenshots/logo_image.png", width=50)
+        with col2:
+            st.markdown("### MemoBrain OS")
         
-        # Main navigation
-        st.markdown("### 📱 Navigation")
-        page = st.radio(
-            "Select a view",
-            ["📊 Dashboard", "📂 My Files", "📦 Memory Manager", "💬 Ask MemoBrain", "📅 Timeline", "🔄 Relationships", "🔍 Search"],
-            label_visibility="collapsed"
+        # Main navigation using option menu
+        selected = option_menu(
+            menu_title=None,
+            options=["📊 Dashboard", "📂 My Files", "📦 Memory Manager", "🔍 Search", "📅 Timeline", "🔄 Relationships", "💬 Ask MemoBrain"],
+            icons=["speedometer2", "folder", "box", "search", "calendar", "diagram-3", "chat"],
+            menu_icon="cast",
+            default_index=0,
+            styles={
+                "container": {
+                    "padding": "0!important",
+                    "background-color": "var(--background-color)",
+                    "border-radius": "0.5rem",
+                },
+                "icon": {"color": "var(--text-color)", "font-size": "1.2rem"},
+                "nav-link": {
+                    "font-size": "1rem",
+                    "text-align": "left",
+                    "margin": "0.2rem 0",
+                    "border-radius": "0.5rem",
+                    "color": "var(--text-color)",
+                    "padding": "0.8rem 1rem",
+                },
+                "nav-link-selected": {
+                    "background-color": "var(--primary-color)",
+                    "color": "white",
+                },
+            },
         )
-        st.session_state["current_page"] = page
+        st.session_state["current_page"] = selected
         
         # Quick actions
         st.markdown("### ⚡ Quick Actions")
-        if st.button("➕ New Memory"):
-            st.session_state["current_page"] = "📦 Memory Manager"
-        
-        if st.button("🔍 Quick Search"):
-            st.session_state["current_page"] = "🔍 Search"
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("➕ New Memory", use_container_width=True):
+                st.session_state["current_page"] = "📦 Memory Manager"
+        with col2:
+            if st.button("🔍 Quick Search", use_container_width=True):
+                st.session_state["current_page"] = "🔍 Search"
         
         # Memory insights
         st.markdown("### 📊 Memory Insights")
@@ -42,8 +70,39 @@ def render_sidebar(user_id: str):
                                 if datetime.fromisoformat(m.get("temporal_metadata", {}).get("last_accessed", "2000-01-01")) 
                                 > datetime.now() - timedelta(days=7))
             
-            st.metric("Total Memories", total_memories)
-            st.metric("Recent Activity", recent_memories)
+            # Create metrics with custom styling
+            st.markdown("""
+                <style>
+                    .metric-card {
+                        background-color: var(--background-color);
+                        border: 1px solid var(--border-color);
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                        margin: 0.5rem 0;
+                    }
+                    .metric-value {
+                        font-size: 1.5rem;
+                        font-weight: bold;
+                        color: var(--primary-color);
+                    }
+                    .metric-label {
+                        font-size: 0.9rem;
+                        color: var(--text-color);
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Display metrics
+            st.markdown(f"""
+                <div class="metric-card">
+                    <div class="metric-value">{total_memories}</div>
+                    <div class="metric-label">Total Memories</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">{recent_memories}</div>
+                    <div class="metric-label">Recent Activity</div>
+                </div>
+            """, unsafe_allow_html=True)
             
             # Memory categories
             categories = {}
@@ -76,7 +135,8 @@ def render_sidebar(user_id: str):
             if all_tags:
                 selected_tags = st.multiselect(
                     "Filter by tags",
-                    sorted(all_tags)
+                    sorted(all_tags),
+                    key="sidebar_tags"
                 )
                 if selected_tags:
                     st.session_state["selected_tags"] = selected_tags
@@ -85,7 +145,8 @@ def render_sidebar(user_id: str):
             importance_levels = ["Critical", "High", "Medium", "Low", "Minimal"]
             selected_importance = st.multiselect(
                 "Filter by importance",
-                importance_levels
+                importance_levels,
+                key="sidebar_importance"
             )
             if selected_importance:
                 st.session_state["selected_importance"] = selected_importance
@@ -108,10 +169,10 @@ def render_sidebar(user_id: str):
         
         # Help and support
         st.markdown("### ❓ Help & Support")
-        if st.button("📚 Documentation"):
+        if st.button("📚 Documentation", use_container_width=True):
             st.markdown("[Open Documentation](https://github.com/mangesh-ux/multimodal-memory-assistant)")
         
-        if st.button("🐛 Report Issue"):
+        if st.button("🐛 Report Issue", use_container_width=True):
             st.markdown("[Create Issue](https://github.com/mangesh-ux/multimodal-memory-assistant/issues)")
         
         # Footer
