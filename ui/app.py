@@ -586,13 +586,13 @@ elif page == "💬 Ask MemoBrain":
         with st.spinner("Searching your memories..."):
             try:
                 top_chunks = retrieve_relevant_chunks(prompt, user_id=user_id, top_k=5)
-                if not top_chunks:
-                    st.warning("No relevant memories found. Try uploading more files or rephrasing your question.")
-                    st.session_state.chat_history.append({
-                        "role": "assistant", 
-                        "content": "I couldn't find any relevant information in your memories. Try uploading more files or rephrasing your question."
-                    })
-                    st.rerun()
+                # if not top_chunks:
+                #     st.warning("No relevant memories found. Try uploading more files or rephrasing your question.")
+                #     st.session_state.chat_history.append({
+                #         "role": "assistant", 
+                #         "content": "I couldn't find any relevant information in your memories. Try uploading more files or rephrasing your question."
+                #     })
+                #     st.rerun()
                     
                 context = format_context_with_metadata(top_chunks)
 
