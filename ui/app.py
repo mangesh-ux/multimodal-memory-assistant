@@ -135,6 +135,7 @@ st.markdown("""
 def render_dashboard(user_id: str):
     """Render the main dashboard with memory statistics and insights."""
     st.title("🧠 MemoBrain OS Dashboard")
+    st.markdown('<div style="color:#a0a0a0; font-size:1.1rem; margin-bottom:1.5rem;">Your Personal Memory Operating System</div>', unsafe_allow_html=True)
     
     # Load memory data
     memory_path = get_memory_index_path(user_id)
@@ -152,15 +153,17 @@ def render_dashboard(user_id: str):
     importance_levels = Counter(m.get("importance", 3) for m in memories)
     
     # Create dashboard layout
+    st.markdown('<hr style="border: 0; border-top: 1px solid #3e3e3e; margin: 1rem 0 1.5rem 0;" />', unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.markdown("""
             <div class="dashboard-card">
-                <h3>📊 Memory Statistics</h3>
-                <p>Total Memories: {}</p>
-                <p>Total Size: {:.1f} MB</p>
-                <p>Categories: {}</p>
+                <h3>Total Memories Stored</h3>
+                <div style='color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;'>All memories you have added to MemoBrain.</div>
+                <p style='font-size:2rem; font-weight:700;'>{:,}</p>
+                <p>Total Size: <b>{:.1f} MB</b></p>
+                <p>Categories: <b>{}</b></p>
             </div>
         """.format(
             total_memories,
@@ -169,31 +172,37 @@ def render_dashboard(user_id: str):
         ), unsafe_allow_html=True)
     
     with col2:
-        # Create importance distribution pie chart
+        st.markdown("<div class='dashboard-card'><h3>Memory Importance</h3><div style='color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;'>Distribution of memories by importance level.</div>", unsafe_allow_html=True)
         fig = px.pie(
             values=list(importance_levels.values()),
             names=[f"Level {k}" for k in importance_levels.keys()],
-            title="Memory Importance Distribution"
+            title=""
         )
         st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
     
     with col3:
-        # Create category distribution bar chart
+        st.markdown("<div class='dashboard-card'><h3>Memory Categories</h3><div style='color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;'>How your memories are organized by category.</div>", unsafe_allow_html=True)
         fig = px.bar(
             x=list(categories.keys()),
             y=list(categories.values()),
-            title="Memory Categories"
+            labels={'x': 'Category', 'y': 'Count'},
+            title=""
         )
         st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
     
+    st.markdown('<hr style="border: 0; border-top: 1px solid #3e3e3e; margin: 1.5rem 0;" />', unsafe_allow_html=True)
     # Recent memories timeline
     st.markdown("### 📅 Recent Memories")
+    st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Your 5 most recently accessed memories.</div>', unsafe_allow_html=True)
     recent_memories = sorted(
         memories,
         key=lambda x: x.get("temporal_metadata", {}).get("last_accessed", ""),
         reverse=True
     )[:5]
-    
+    if not recent_memories:
+        st.info("No recent memories found.")
     for memory in recent_memories:
         with st.expander(f"{memory.get('title', 'Untitled')} ({memory.get('category', 'uncategorized')})"):
             col1, col2 = st.columns([3, 1])
@@ -245,6 +254,15 @@ def render_dashboard(user_id: str):
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("No memory relationships found. Create relationships between memories to see them here!")
+
+    # Footer
+    st.markdown("""
+        <div style='margin-top:2rem; padding-top:1rem; border-top:1px solid #3e3e3e; text-align:center; color:#a0a0a0;'>
+            Powered by MemoBrain &mdash; Your Personal Memory OS<br>
+            MemoBrain OS v1.0<br>
+            © 2025 Mangesh Gupta
+        </div>
+    """, unsafe_allow_html=True)
 
 # Page title
 st.title("MemoBrain OS")
