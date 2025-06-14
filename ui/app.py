@@ -63,17 +63,18 @@ st.markdown("""
 <style>
     /* Modern OS-like interface */
     .main {
-        background-color: #f8f9fa;
+        background-color: var(--background-color);
     }
     
     /* Dashboard cards */
     .dashboard-card {
-        background-color: white;
+        background-color: var(--background-color);
         border-radius: 10px;
         padding: 20px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin-bottom: 20px;
         transition: transform 0.2s;
+        border: 1px solid var(--border-color);
     }
     
     .dashboard-card:hover {
@@ -96,10 +97,11 @@ st.markdown("""
     
     /* Relationship graph */
     .relationship-graph {
-        background-color: white;
+        background-color: var(--background-color);
         border-radius: 10px;
         padding: 20px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
     }
     
     /* Timeline view */
@@ -114,6 +116,18 @@ st.markdown("""
         .stButton button {width: 100%;}
         .stTextInput input {width: 100%;}
         .stSelectbox select {width: 100%;}
+    }
+
+    /* Dark mode variables */
+    [data-theme="dark"] {
+        --background-color: #262730;
+        --border-color: #3e3e3e;
+    }
+
+    /* Light mode variables */
+    [data-theme="light"] {
+        --background-color: #ffffff;
+        --border-color: #e0e0e0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -546,3 +560,89 @@ elif page == "🔍 Search":
                     st.info("No memories found matching your search query.")
             else:
                 st.info("No memories found. Start by creating some memories!")
+
+# Ask MemoBrain Tab
+elif page == "🤖 Ask MemoBrain":
+    st.title("🤖 Ask MemoBrain")
+    st.markdown("Ask questions about your memories and get AI-powered insights.")
+    
+    # Initialize chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+    
+    # Display chat history
+    for message in st.session_state.chat_history:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    
+    # Chat input
+    if prompt := st.chat_input("Ask MemoBrain anything..."):
+        # Add user message to chat history
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
+        
+        # Display user message
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        
+        # Get AI response
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                try:
+                    # Retrieve relevant chunks using semantic search
+                    relevant_chunks = retrieve_relevant_chunks(prompt, user_id, top_k=5)
+                    
+                    if relevant_chunks:
+                        # Format context with metadata
+                        memory_context = format_context_with_metadata(relevant_chunks)
+                        
+                        # Prepare GPT-4 prompt
+                        system_prompt = """You are MemoBrain, a helpful AI assistant that answers questions based on the user's personal memories.
+                        Your responses should be:
+                        1. Calm and professional
+                        2. Based on the provided memory context
+                        3. Include specific dates and temporal references
+                        4. Acknowledge uncertainty when appropriate
+                        5. Well-structured and easy to read
+                        6. Include relevant metadata (categories, tags) when helpful
+                        
+                        If the memory context doesn't contain enough information to answer the question:
+                        1. Acknowledge what you know from the context
+                        2. Explain what information is missing
+                        3. Suggest what additional memories might help
+                        
+                        Current question: {prompt}
+                        
+                        Memory context:
+                        {memory_context}"""
+                        
+                        # Get GPT-4 response
+                        response = openai.ChatCompletion.create(
+                            model="gpt-4",
+                            messages=[
+                                {"role": "system", "content": system_prompt.format(
+                                    prompt=prompt,
+                                    memory_context=memory_context
+                                )},
+                                {"role": "user", "content": prompt}
+                            ],
+                            temperature=0.7,
+                            max_tokens=1000
+                        )
+                        
+                        # Extract and format response
+                        ai_response = response.choices[0].message.content
+                        
+                        # Add memory access tracking
+                        for chunk in relevant_chunks:
+                            if "id" in chunk:
+                                update_memory_access(chunk["id"], user_id)
+                    else:
+                        ai_response = "I couldn't find any memories directly related to your question. Would you like me to search more broadly or help you create a new memory?"
+                    
+                    # Add AI response to chat history
+                    st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
+                    st.markdown(ai_response)
+                except Exception as e:
+                    error_message = f"Sorry, I encountered an error: {str(e)}"
+                    st.session_state.chat_history.append({"role": "assistant", "content": error_message})
+                    st.markdown(error_message)
