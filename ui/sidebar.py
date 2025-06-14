@@ -114,7 +114,7 @@ def render_sidebar(user_id: str):
     with st.sidebar:
         # Professional logo using st.logo (title not needed)
         st.logo("./screenshots/logo_image.png", size="large")
-        st.markdown('<hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0 1.5rem 0;" />', unsafe_allow_html=True)
+        # st.markdown('<hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0 1.5rem 0;" />', unsafe_allow_html=True)
         
         # Main navigation with enhanced styling
         selected = option_menu(
