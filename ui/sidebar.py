@@ -9,7 +9,7 @@ def render_sidebar(user_id: str):
     """Render the enhanced sidebar with OS-like navigation and features."""
     
     with st.sidebar:
-        st.image("https://raw.githubusercontent.com/streamlit/streamlit/master/docs/images/logo.svg", width=50)
+        st.image("./screenshots/logo_image.png", width=50)
         st.title("MemoBrain OS")
         
         # Main navigation
@@ -117,5 +117,5 @@ def render_sidebar(user_id: str):
         # Footer
         st.markdown("---")
         st.markdown("MemoBrain OS v1.0")
-        st.markdown("© 2024 Your Name")
+        st.markdown("© 2025 Mangesh Gupta")
 

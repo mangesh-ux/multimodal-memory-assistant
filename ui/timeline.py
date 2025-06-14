@@ -8,6 +8,14 @@ from core.memory_handler import update_memory_access, MemoryImportance
 
 def render_timeline_view(user_id: str):
     """Render the timeline view of memories."""
+    # Initialize page state
+    if "timeline_state" not in st.session_state:
+        st.session_state["timeline_state"] = {
+            "date_range": (datetime.now().date(), datetime.now().date()),
+            "selected_categories": [],
+            "selected_importance": []
+        }
+    
     st.title("📅 Memory Timeline")
     
     # Load memories
@@ -30,23 +38,28 @@ def render_timeline_view(user_id: str):
     with col1:
         date_range = st.date_input(
             "Date Range",
-            value=(datetime.now().date(), datetime.now().date()),
+            value=st.session_state["timeline_state"]["date_range"],
             key="timeline_date_range"
         )
+        st.session_state["timeline_state"]["date_range"] = date_range
     
     with col2:
         selected_categories = st.multiselect(
             "Categories",
             options=sorted(set(m.get("category", "uncategorized") for m in memories)),
+            default=st.session_state["timeline_state"]["selected_categories"],
             key="timeline_categories"
         )
+        st.session_state["timeline_state"]["selected_categories"] = selected_categories
     
     with col3:
         selected_importance = st.multiselect(
             "Importance",
             options=[level.name for level in MemoryImportance],
+            default=st.session_state["timeline_state"]["selected_importance"],
             key="timeline_importance"
         )
+        st.session_state["timeline_state"]["selected_importance"] = selected_importance
     
     # Filter memories
     filtered_memories = memories

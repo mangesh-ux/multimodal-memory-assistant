@@ -39,6 +39,15 @@ def create_relationship_graph(memories: List[Dict[str, Any]]) -> nx.Graph:
 
 def render_relationships_view(user_id: str):
     """Render the relationships view of memories."""
+    # Initialize page state
+    if "relationships_state" not in st.session_state:
+        st.session_state["relationships_state"] = {
+            "selected_source": None,
+            "selected_target": None,
+            "relationship_type": "references",
+            "relationship_description": ""
+        }
+    
     st.title("🔄 Memory Relationships")
     
     # Load memories
@@ -66,24 +75,37 @@ def render_relationships_view(user_id: str):
         source_memory = st.selectbox(
             "Source Memory",
             options=[(m["id"], m.get("title", "Untitled")) for m in memories],
-            format_func=lambda x: x[1]
+            format_func=lambda x: x[1],
+            key="source_memory"
         )
+        if source_memory:
+            st.session_state["relationships_state"]["selected_source"] = source_memory
     
     with col2:
         # Target memory selection
         target_memory = st.selectbox(
             "Target Memory",
             options=[(m["id"], m.get("title", "Untitled")) for m in memories if m["id"] != source_memory[0]],
-            format_func=lambda x: x[1]
+            format_func=lambda x: x[1],
+            key="target_memory"
         )
+        if target_memory:
+            st.session_state["relationships_state"]["selected_target"] = target_memory
     
     # Relationship details
     relationship_type = st.selectbox(
         "Relationship Type",
-        options=["references", "depends_on", "related_to", "summarizes", "expands_on", "contradicts"]
+        options=["references", "depends_on", "related_to", "summarizes", "expands_on", "contradicts"],
+        key="relationship_type"
     )
+    st.session_state["relationships_state"]["relationship_type"] = relationship_type
     
-    relationship_description = st.text_area("Relationship Description")
+    relationship_description = st.text_area(
+        "Relationship Description",
+        value=st.session_state["relationships_state"]["relationship_description"],
+        key="relationship_description"
+    )
+    st.session_state["relationships_state"]["relationship_description"] = relationship_description
     
     if st.button("Create Relationship"):
         if source_memory and target_memory:
@@ -95,6 +117,8 @@ def render_relationships_view(user_id: str):
                 user_id
             )
             st.success("Relationship created successfully!")
+            # Clear the form
+            st.session_state["relationships_state"]["relationship_description"] = ""
             st.rerun()
     
     # Visualize relationships

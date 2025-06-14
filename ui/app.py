@@ -15,6 +15,8 @@ from collections import Counter
 import uuid
 
 from ui.my_files import render_my_files_tab
+from ui.timeline import render_timeline_view
+from ui.relationships import render_relationships_view
 from core.memory_handler import (
     save_uploaded_file, 
     update_memory_access,
@@ -241,7 +243,19 @@ if not user_id:
 
 # Render sidebar navigation
 render_sidebar(user_id)
+
+# Get current page from session state
 page = st.session_state.get("current_page", "📊 Dashboard")
+
+# Clear any previous page state
+if "previous_page" not in st.session_state:
+    st.session_state["previous_page"] = page
+elif st.session_state["previous_page"] != page:
+    # Clear any page-specific state when changing pages
+    for key in list(st.session_state.keys()):
+        if key.startswith("page_"):
+            del st.session_state[key]
+    st.session_state["previous_page"] = page
 
 # Dashboard Tab
 if page == "📊 Dashboard":
@@ -447,65 +461,88 @@ elif page == "📦 Memory Manager":
         elif submit_button:
             st.warning("Please enter some content for your note.")
 
-# Ask MemoBrain Tab
-elif page == "💬 Ask MemoBrain":
-    st.title("💬 Ask MemoBrain")
-    st.markdown("Ask any question. MemoBrain will answer based on your uploaded memory.")
+# Timeline Tab
+elif page == "📅 Timeline":
+    render_timeline_view(user_id)
 
-    # Initialize chat history
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
+# Relationships Tab
+elif page == "🔄 Relationships":
+    render_relationships_view(user_id)
 
-    # Display chat history
-    for msg in st.session_state.chat_history:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    # Chat input
-    prompt = st.chat_input("Ask a question about your memories...")
-    if prompt:
-        # Add user message to chat
-        st.chat_message("user").markdown(prompt)
-        st.session_state.chat_history.append({"role": "user", "content": prompt})
-
-        # Retrieve relevant chunks
-        with st.spinner("Searching your memories..."):
-            try:
-                top_chunks = retrieve_relevant_chunks(prompt, user_id=user_id, top_k=5)
-                if not top_chunks:
-                    st.warning("No relevant memories found. Try uploading more files or rephrasing your question.")
-                    st.session_state.chat_history.append({
-                        "role": "assistant", 
-                        "content": "I couldn't find any relevant information in your memories. Try uploading more files or rephrasing your question."
-                    })
-                    st.rerun()
+# Search Tab
+elif page == "🔍 Search":
+    st.title("🔍 Memory Search")
+    
+    # Search interface
+    search_query = st.text_input("Search your memories", placeholder="Enter your search query...")
+    
+    if search_query:
+        with st.spinner("Searching memories..."):
+            # Load memories
+            memory_path = get_memory_index_path(user_id)
+            if memory_path.exists():
+                with open(memory_path, "r") as f:
+                    memories = json.load(f)
+                
+                # Search through memories
+                results = []
+                for memory in memories:
+                    # Check if query matches any metadata
+                    if (search_query.lower() in memory.get("title", "").lower() or
+                        search_query.lower() in memory.get("text_preview", "").lower() or
+                        any(search_query.lower() in tag.lower() for tag in memory.get("tags", [])) or
+                        search_query.lower() in memory.get("category", "").lower() or
+                        search_query.lower() in memory.get("notes", "").lower()):
+                        results.append(memory)
+                
+                if results:
+                    st.markdown(f"### Found {len(results)} results")
                     
-                context = format_context_with_metadata(top_chunks)
-
-                # Generate response
-                system_prompt = (
-                    "You are MemoBrain — a calm, helpful memory assistant. "
-                    "You should summarize clearly, reference file titles and dates when available, and admit when unsure."
-                )
-
-                response = openai.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"}
-                    ]
-                )
-
-                reply = response.choices[0].message.content.strip()
-                st.chat_message("assistant").markdown(reply)
-                st.session_state.chat_history.append({"role": "assistant", "content": reply})
-            except Exception as e:
-                error_message = f"Error processing your question: {str(e)}"
-                st.error(error_message)
-                st.session_state.chat_history.append({"role": "assistant", "content": error_message})
-
-    # Reset conversation button
-    if st.button("🔁 Reset Conversation"):
-        st.session_state.chat_history = []
-        st.rerun()
-        st.rerun()
+                    # Display results
+                    for memory in results:
+                        with st.expander(f"{memory.get('title', 'Untitled')} ({memory.get('category', 'uncategorized')})"):
+                            col1, col2 = st.columns([3, 1])
+                            
+                            with col1:
+                                # Memory content
+                                st.markdown(memory.get("text_preview", "")[:500] + "...")
+                                
+                                # Tags
+                                if memory.get("tags"):
+                                    st.markdown(
+                                        " ".join(f"`{tag}`" for tag in memory.get("tags", [])),
+                                        unsafe_allow_html=True
+                                    )
+                                
+                                # Notes
+                                if memory.get("notes"):
+                                    st.markdown("**Notes:**")
+                                    st.markdown(memory.get("notes"))
+                            
+                            with col2:
+                                # Metadata
+                                st.markdown(f"""
+                                    <div style="
+                                        border-left: 3px solid #007bff;
+                                        padding-left: 10px;
+                                        margin: 10px 0;
+                                    ">
+                                        <p><strong>Created:</strong> {datetime.fromisoformat(memory.get('temporal_metadata', {}).get('created_at', '2000-01-01')).strftime('%Y-%m-%d %H:%M')}</p>
+                                        <p><strong>Last accessed:</strong> {datetime.fromisoformat(memory.get('temporal_metadata', {}).get('last_accessed', '2000-01-01')).strftime('%Y-%m-%d %H:%M')}</p>
+                                        <p><strong>Importance:</strong> {MemoryImportance(memory.get('importance', 3)).name}</p>
+                                    </div>
+                                """, unsafe_allow_html=True)
+                                
+                                # Actions
+                                if st.button("View Details", key=f"view_{memory.get('id', '')}"):
+                                    update_memory_access(memory["id"], user_id)
+                                    st.session_state["selected_memory"] = memory
+                                    st.session_state["current_page"] = "📦 Memory Manager"
+                                
+                                if st.button("View Relationships", key=f"rel_{memory.get('id', '')}"):
+                                    st.session_state["selected_memory"] = memory
+                                    st.session_state["current_page"] = "🔄 Relationships"
+                else:
+                    st.info("No memories found matching your search query.")
+            else:
+                st.info("No memories found. Start by creating some memories!")
