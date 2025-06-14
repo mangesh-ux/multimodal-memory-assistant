@@ -116,7 +116,7 @@ def render_sidebar(user_id: str):
         st.markdown('<div class="logo-container">', unsafe_allow_html=True)
         col1, col2 = st.columns([1, 3])
         with col1:
-            st.image("./screenshots/logo_image.png", use_column_width=True)
+            st.image("./screenshots/logo_image.png", use_container_width=True)
         with col2:
             st.markdown("### MemoBrain OS")
         st.markdown('</div>', unsafe_allow_html=True)
