@@ -562,87 +562,63 @@ elif page == "🔍 Search":
                 st.info("No memories found. Start by creating some memories!")
 
 # Ask MemoBrain Tab
-elif page == "🤖 Ask MemoBrain":
-    st.title("🤖 Ask MemoBrain")
-    st.markdown("Ask questions about your memories and get AI-powered insights.")
-    
+elif page == "💬 Ask MemoBrain":
+    st.title("💬 Ask MemoBrain")
+    st.markdown("Ask any question. MemoBrain will answer based on your uploaded memory.")
+
     # Initialize chat history
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
-    
+
     # Display chat history
-    for message in st.session_state.chat_history:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-    
+    for msg in st.session_state.chat_history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
     # Chat input
-    if prompt := st.chat_input("Ask MemoBrain anything..."):
-        # Add user message to chat history
+    prompt = st.chat_input("Ask a question about your memories...")
+    if prompt:
+        # Add user message to chat
+        st.chat_message("user").markdown(prompt)
         st.session_state.chat_history.append({"role": "user", "content": prompt})
-        
-        # Display user message
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        
-        # Get AI response
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                try:
-                    # Retrieve relevant chunks using semantic search
-                    relevant_chunks = retrieve_relevant_chunks(prompt, user_id, top_k=5)
+
+        # Retrieve relevant chunks
+        with st.spinner("Searching your memories..."):
+            try:
+                top_chunks = retrieve_relevant_chunks(prompt, user_id=user_id, top_k=5)
+                if not top_chunks:
+                    st.warning("No relevant memories found. Try uploading more files or rephrasing your question.")
+                    st.session_state.chat_history.append({
+                        "role": "assistant", 
+                        "content": "I couldn't find any relevant information in your memories. Try uploading more files or rephrasing your question."
+                    })
+                    st.rerun()
                     
-                    if relevant_chunks:
-                        # Format context with metadata
-                        memory_context = format_context_with_metadata(relevant_chunks)
-                        
-                        # Prepare GPT-4 prompt
-                        system_prompt = """You are MemoBrain, a helpful AI assistant that answers questions based on the user's personal memories.
-                        Your responses should be:
-                        1. Calm and professional
-                        2. Based on the provided memory context
-                        3. Include specific dates and temporal references
-                        4. Acknowledge uncertainty when appropriate
-                        5. Well-structured and easy to read
-                        6. Include relevant metadata (categories, tags) when helpful
-                        
-                        If the memory context doesn't contain enough information to answer the question:
-                        1. Acknowledge what you know from the context
-                        2. Explain what information is missing
-                        3. Suggest what additional memories might help
-                        
-                        Current question: {prompt}
-                        
-                        Memory context:
-                        {memory_context}"""
-                        
-                        # Get GPT-4 response
-                        response = openai.ChatCompletion.create(
-                            model="gpt-4",
-                            messages=[
-                                {"role": "system", "content": system_prompt.format(
-                                    prompt=prompt,
-                                    memory_context=memory_context
-                                )},
-                                {"role": "user", "content": prompt}
-                            ],
-                            temperature=0.7,
-                            max_tokens=1000
-                        )
-                        
-                        # Extract and format response
-                        ai_response = response.choices[0].message.content
-                        
-                        # Add memory access tracking
-                        for chunk in relevant_chunks:
-                            if "id" in chunk:
-                                update_memory_access(chunk["id"], user_id)
-                    else:
-                        ai_response = "I couldn't find any memories directly related to your question. Would you like me to search more broadly or help you create a new memory?"
-                    
-                    # Add AI response to chat history
-                    st.session_state.chat_history.append({"role": "assistant", "content": ai_response})
-                    st.markdown(ai_response)
-                except Exception as e:
-                    error_message = f"Sorry, I encountered an error: {str(e)}"
-                    st.session_state.chat_history.append({"role": "assistant", "content": error_message})
-                    st.markdown(error_message)
+                context = format_context_with_metadata(top_chunks)
+
+                # Generate response
+                system_prompt = (
+                    "You are MemoBrain — a calm, helpful memory assistant. "
+                    "You should summarize clearly, reference file titles and dates when available, and admit when unsure."
+                )
+
+                response = openai.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": f"Context:\n{context}\n\nQuestion:\n{prompt}"}
+                    ]
+                )
+
+                reply = response.choices[0].message.content.strip()
+                st.chat_message("assistant").markdown(reply)
+                st.session_state.chat_history.append({"role": "assistant", "content": reply})
+            except Exception as e:
+                error_message = f"Error processing your question: {str(e)}"
+                st.error(error_message)
+                st.session_state.chat_history.append({"role": "assistant", "content": error_message})
+
+    # Reset conversation button
+    if st.button("🔁 Reset Conversation"):
+        st.session_state.chat_history = []
+        st.rerun()

@@ -16,7 +16,7 @@ def render_sidebar(user_id: str):
         st.markdown("### 📱 Navigation")
         page = st.radio(
             "Select a view",
-            ["📊 Dashboard", "📂 My Files", "📦 Memory Manager", "🔍 Search", "📅 Timeline", "🔄 Relationships", "🤖 Ask MemoBrain"],
+            ["📊 Dashboard", "📂 My Files", "📦 Memory Manager", "💬 Ask MemoBrain", "📅 Timeline", "🔄 Relationships", "🔍 Search"],
             label_visibility="collapsed"
         )
         st.session_state["current_page"] = page
