@@ -112,11 +112,13 @@ def render_sidebar(user_id: str):
     """, unsafe_allow_html=True)
     
     with st.sidebar:
-        # Professional logo using st.logo (title not needed)
+        # Professional logo and tagline
         st.sidebar.image("./screenshots/logo_image.png", width=240)
+        st.markdown('<div style="color:#a0a0a0; font-size:1rem; text-align:center; margin-bottom:0.5rem;">Your Personal Memory Operating System</div>', unsafe_allow_html=True)
         st.markdown('<hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 1rem 0 1.5rem 0;" />', unsafe_allow_html=True)
         
         # Main navigation with enhanced styling
+        st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Navigate your MemoBrain OS</div>', unsafe_allow_html=True)
         selected = option_menu(
             menu_title=None,
             options=["📊 Dashboard", "📂 My Files", "📦 Memory Manager", "🔍 Search", "📅 Timeline", "🔄 Relationships", "💬 Ask MemoBrain"],
@@ -148,6 +150,7 @@ def render_sidebar(user_id: str):
         
         # Quick actions with enhanced styling
         st.markdown('<div class="section-header">⚡ Quick Actions</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Create new memories or search instantly.</div>', unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
             if st.button("➕ New Memory", use_container_width=True):
@@ -158,6 +161,7 @@ def render_sidebar(user_id: str):
         
         # Memory insights with enhanced styling
         st.markdown('<div class="section-header">📊 Memory Insights</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Track your memory usage and recent activity (last 7 days).</div>', unsafe_allow_html=True)
         memory_path = get_memory_index_path(user_id)
         if memory_path.exists():
             with open(memory_path, "r") as f:
@@ -176,7 +180,7 @@ def render_sidebar(user_id: str):
                 </div>
                 <div class="metric-card">
                     <div class="metric-value">{recent_memories}</div>
-                    <div class="metric-label">Recent Activity</div>
+                    <div class="metric-label">Recent Activity (7d)</div>
                 </div>
             """, unsafe_allow_html=True)
             
@@ -187,6 +191,7 @@ def render_sidebar(user_id: str):
                 categories[cat] = categories.get(cat, 0) + 1
             
             st.markdown('<div class="section-header">Categories</div>', unsafe_allow_html=True)
+            st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Distribution of your memories by category.</div>', unsafe_allow_html=True)
             for cat, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
                 st.markdown(f"<div style='padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 6px; margin: 0.3rem 0;'>{cat}: {count}</div>", unsafe_allow_html=True)
         else:
@@ -194,11 +199,13 @@ def render_sidebar(user_id: str):
         
         # System status with enhanced styling
         st.markdown('<div class="section-header">💻 System Status</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Account and sync status.</div>', unsafe_allow_html=True)
         st.markdown(f"<div style='padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 6px; margin: 0.3rem 0;'>User ID: {user_id}</div>", unsafe_allow_html=True)
         st.markdown(f"<div style='padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 6px; margin: 0.3rem 0;'>Last Sync: {datetime.now().strftime('%Y-%m-%d %H:%M')}</div>", unsafe_allow_html=True)
         
         # Quick filters with enhanced styling
         st.markdown('<div class="section-header">🔍 Quick Filters</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Filter your memories by tags or importance.</div>', unsafe_allow_html=True)
         if memory_path.exists():
             with open(memory_path, "r") as f:
                 memories = json.load(f)
@@ -227,6 +234,7 @@ def render_sidebar(user_id: str):
         
         # User preferences with enhanced styling
         st.markdown('<div class="section-header">⚙️ Preferences</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Customize your experience.</div>', unsafe_allow_html=True)
         with st.expander("Display Settings"):
             st.checkbox("Show previews", value=True, key="show_previews")
             st.checkbox("Auto-generate summaries", value=True, key="auto_summarize")
@@ -243,6 +251,7 @@ def render_sidebar(user_id: str):
         
         # Help and support with enhanced styling
         st.markdown('<div class="section-header">❓ Help & Support</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#a0a0a0; font-size:0.95rem; margin-bottom:0.5rem;">Find documentation or report issues.</div>', unsafe_allow_html=True)
         if st.button("📚 Documentation", use_container_width=True):
             st.markdown("[Open Documentation](https://github.com/mangesh-ux/multimodal-memory-assistant)")
         
