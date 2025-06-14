@@ -129,7 +129,7 @@ def cleanup_expired_demos():
 def login_screen():
     # Add MemoBrain logo and tagline
     st.markdown('<div style="display:flex; flex-direction:column; align-items:center; margin-bottom:1.5rem;">', unsafe_allow_html=True)
-    st.image("./screenshots/logo_image.png", width=240)
+    # st.image("./screenshots/logo_image.png", width=240)
     st.markdown('<div style="color:#a0a0a0; font-size:1.1rem; text-align:left; margin-top:0.5rem;">Your Personal Memory Operating System</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("## 🔐 Login / Sign Up")
