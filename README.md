@@ -10,6 +10,8 @@ MemoBrain OS is a sophisticated personal memory management system that helps you
 - **Memory Importance**: Automatically or manually assign importance levels to memories
 - **Memory Relationships**: Create and visualize connections between related memories
 - **Temporal Organization**: View and filter memories chronologically
+![Alt text](image-5.png)
+![Alt text](image-4.png)
 
 ### 📊 Dashboard
 - Memory statistics and insights
@@ -41,8 +43,6 @@ MemoBrain OS is a sophisticated personal memory management system that helps you
 - **Context Preservation**: Store creation context and metadata
 - **Version Control**: Track changes to memories over time
 - **Auto-summarization**: AI-generated summaries of long content
-
-![Alt text](image-4.png)
 
 ## 🚀 Getting Started
 
