@@ -17,6 +17,7 @@ MemoBrain OS is a sophisticated personal memory management system that helps you
 - Category distribution analysis
 - Recent memories timeline
 - Memory relationship graph
+![Alt text](image-2.png)
 
 ### 📅 Timeline View
 - Chronological view of all memories
@@ -24,6 +25,7 @@ MemoBrain OS is a sophisticated personal memory management system that helps you
 - Category and importance filtering
 - Detailed memory metadata
 - Quick access to related memories
+![Alt text](image-3.png)
 
 ### 🔄 Relationship Management
 - Create connections between memories
@@ -31,12 +33,16 @@ MemoBrain OS is a sophisticated personal memory management system that helps you
 - Different relationship types (references, depends_on, related_to, etc.)
 - Relationship descriptions and metadata
 
+![Alt text](image-1.png)
+
 ### 🎯 Memory Features
 - **Importance Scoring**: Automatic and manual importance assignment
 - **Access Tracking**: Monitor how often memories are accessed
 - **Context Preservation**: Store creation context and metadata
 - **Version Control**: Track changes to memories over time
 - **Auto-summarization**: AI-generated summaries of long content
+
+![Alt text](image-4.png)
 
 ## 🚀 Getting Started
 
