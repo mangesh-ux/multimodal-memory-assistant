@@ -1,6 +1,6 @@
 # MemoBrain OS - Your Personal Memory Operating System
 
-MemoBrain OS is a sophisticated personal memory management system that helps you organize, connect, and retrieve your digital memories in a way that mimics how your brain works. It's not just a file manager or note-taking app—it's a complete operating system for your memories.
+MemoBrain OS is a sophisticated personal memory management system that helps you organize, connect, and retrieve your digital memories in a way that mimics how your brain works. It's not just a file manager or note-taking app, it's a complete operating system for your memories.
 
 ## 🌟 Key Features
 
